@@ -141,3 +141,9 @@ Session.vim
 
 # Huge folder 
 */2016-11-21-CR/
+
+# to do file
+todo
+
+# Grids input file "big files"
+*.gri

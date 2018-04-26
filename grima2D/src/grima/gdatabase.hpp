@@ -143,6 +143,12 @@ struct GTokenData {
   uint               freq;
 };
 
+struct D_GTokenData {
+  
+  GTokenData token;
+  vector<bool> is_difference_v;
+};
+
 /**
  * @brief GClassDB
  * Store graph by classname.

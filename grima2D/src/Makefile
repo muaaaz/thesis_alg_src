@@ -53,7 +53,9 @@ SOURCES       = main.cpp \
 		grima/gpattern.cpp \
 		grima/gsubgraphiso.cpp \
 		grima/gvocab.cpp \
-		grima/gcanonicaldfscomputer.cpp 
+		grima/gcanonicaldfscomputer.cpp \
+		MCTSgrima.cpp \
+		MCTS.cpp
 OBJECTS       = main.o \
 		greader.o \
 		gdatabase.o \
@@ -64,7 +66,9 @@ OBJECTS       = main.o \
 		gpattern.o \
 		gsubgraphiso.o \
 		gvocab.o \
-		gcanonicaldfscomputer.o
+		gcanonicaldfscomputer.o \
+		MCTSgrima.o \
+		MCTS.o
 DIST          = /usr/share/qt4/mkspecs/common/unix.conf \
 		/usr/share/qt4/mkspecs/common/linux.conf \
 		/usr/share/qt4/mkspecs/common/gcc-base.conf \
@@ -210,7 +214,9 @@ main.o: main.cpp global.hpp \
 		grima/gvocab.hpp \
 		grima/gpattern.hpp \
 		grima/gextensioncollect.hpp \
-		grima/gsubgraphiso.hpp
+		grima/gsubgraphiso.hpp \
+		MCTSgrima.hpp \
+		MCTS.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o main.o main.cpp
 
 greader.o: grima/greader.cpp grima/greader.hpp
@@ -235,6 +241,32 @@ gsparseset.o: grima/gsparseset.cpp grima/gsparseset.hpp \
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gsparseset.o grima/gsparseset.cpp
 
 grima.o: grima/grima.cpp grima/grima.hpp \
+		grima/gglobal.hpp \
+		grima/ggraph.hpp \
+		grima/greader.hpp \
+		grima/gdatabase.hpp \
+		grima/gsparseset.hpp \
+		grima/gvocab.hpp \
+		grima/gpattern.hpp \
+		grima/gextensioncollect.hpp \
+		grima/gsubgraphiso.hpp \
+		global.hpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o grima.o grima/grima.cpp
+
+MCTSgrima.o: grima/MCTSgrima.cpp grima/MCTSgrima.hpp \
+		grima/gglobal.hpp \
+		grima/ggraph.hpp \
+		grima/greader.hpp \
+		grima/gdatabase.hpp \
+		grima/gsparseset.hpp \
+		grima/gvocab.hpp \
+		grima/gpattern.hpp \
+		grima/gextensioncollect.hpp \
+		grima/gsubgraphiso.hpp \
+		global.hpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o grima.o grima/grima.cpp
+
+MCTS.o: grima/MCTS.cpp grima/MCTS.hpp \
 		grima/gglobal.hpp \
 		grima/ggraph.hpp \
 		grima/greader.hpp \

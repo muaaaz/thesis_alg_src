@@ -31,6 +31,8 @@
 //#include "grima/gglobal.hpp"
 #include "grima/gdatabase.hpp"
 #include "grima/grima.hpp"
+#include "grima/MCTSgrima.hpp"
+
 //#include "grima/greader.hpp"
 //#include "grima/gglobal.hpp"
 
@@ -283,7 +285,7 @@ int main( int argc, char **argv )
 
   int returnStatus = 0;
   GDatabase graphDB;
-  Grima     grima;
+  MCTSGrima grima;
   bool timeOutOverride = false;
 
   parseArg( argc, argv, PARAM );
@@ -291,20 +293,23 @@ int main( int argc, char **argv )
   graphDB.createGrapheDB( PARAM.INFILE );
   grima.initNbPatternByClass( graphDB.v_GClassDB );
 
-  for ( uint iClassDB = 0; iClassDB < graphDB.v_GClassDB.size(); iClassDB++ )
+  //for ( uint iClassDB = 0; iClassDB < graphDB.v_GClassDB.size(); iClassDB++ )
+  //{
+  grima.minF      = PARAM.MINFREQ;
+  grima.pClassDB  = graphDB.v_GClassDB.at(0);
+
+  returnStatus = grima.processMining();
+  grima.v_ReturnStatus.push_back(returnStatus);
+  if ( returnStatus == -1 ) // I.E. TIMEOUT
   {
-    returnStatus = grima.processMining( PARAM.MINFREQ, graphDB.v_GClassDB.at(iClassDB), iClassDB );
-    grima.v_ReturnStatus.push_back(returnStatus);
-    if ( returnStatus == -1 ) // I.E. TIMEOUT
-    {
-      timeOutOverride = true;
-      cerr << "Timeout reached for class" <<  graphDB.v_GClassDB.at(iClassDB)->className << endl;
-    }
-    else if ( returnStatus == -2 ) // Nb pattern reached
-    {
-      cerr << "Nb Pattern reached for class" <<  graphDB.v_GClassDB.at(iClassDB)->className << endl;
-    }
+    timeOutOverride = true;
+    cerr << "Timeout reached!"<< endl;
   }
+  else if ( returnStatus == -2 ) // Nb pattern reached
+  {
+    cerr << "Nb Pattern reached!" << endl;
+  }
+  //}
   grima.saveData( timeOutOverride );
   cout << "#==== END OF GRIMA !" << endl;
 }

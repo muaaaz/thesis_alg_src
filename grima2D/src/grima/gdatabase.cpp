@@ -108,6 +108,7 @@ void GDatabase::read( string filename )
   vector<string>    v_Tokens;
   GClassDB          *tmpGClassDB = new GClassDB();
   GReader           *data = new GReader( filename );
+  int tmpClassID = 0;
 
   // Read first line of type "t <tId> <tClassName>
   data->getLine( &v_Tokens );
@@ -121,19 +122,22 @@ void GDatabase::read( string filename )
 
     // Read one graph in file to store it
     graph->read( data, v_Tokens, suppGraphID, tmpGClassDB->className  );
+   
 
-    if ( graph->className != tmpGClassDB->className )
+    if (graph->className != tmpGClassDB->className )
     {
+      ++tmpClassID;
       // If graph belong to a new classname
-      if ( tmpGClassDB->v_ClassGraphs.size() != 0 )
-        v_GClassDB.push_back( tmpGClassDB );
-      else
-        delete tmpGClassDB;
+      //if ( tmpGClassDB->v_ClassGraphs.size() != 0 )
+      //  v_GClassDB.push_back( tmpGClassDB );
+      //else
+      //  delete tmpGClassDB;
 
-      tmpGClassDB = new GClassDB();
+      //tmpGClassDB = new GClassDB();
       tmpGClassDB->className = graph->className;
       suppGraphID = 1;
     }
+    graph->classID = tmpClassID;
     // Add graph to class database
     tmpGClassDB->v_ClassGraphs.push_back( graph );
   }

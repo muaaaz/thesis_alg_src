@@ -160,6 +160,7 @@ public:
   vector<int> v_NbOccPattern;
   /// Class of the current graph
   string className;
+  int classID;
   /// Id of the current graph
   uint graphID;
   /// Graph Dimension

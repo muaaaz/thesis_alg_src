@@ -257,12 +257,14 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     // For all canonical code of 1-edge store in database
     if ( it->second.freq >= minFreq )
     {
-      GExtensionData tmp;
+      GExtensionData tmp; 
       GExtensionData first;
       tmp.nbOcc     = 0;
       tmp.frequency = it->second.freq;
       for ( uint iGraph = 0 ; iGraph < it->second.v_SparseOcc.size() ; iGraph++ )
         tmp.nbOcc += it->second.v_SparseOcc.at(iGraph).size;
+      valid_extenstions->insert(make_pair(it->first,tmp));
+      children_nodes   ->insert(make_pair(it->first,NULL));
 
       // Apply recursive call
       //returnStatus = search( v_Graphs, minFreq, &currentPattern,
@@ -274,6 +276,24 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     // Go to next edge possible edge
     it++;
   }
+
+  int budget = 1994;
+  while(budget--){
+    GPattern currentPattern;
+    currentPattern.pGraph->graphID   = freqPatternId;
+    currentPattern.pGraph->className = "FrequentPattern";
+    MCTS_node* sel_node = select(root);
+    MCTS_node* exp_node = expand(sel_node);
+
+    ///we have to make the expand function save the action that cuase the expansion. wot??
+    currentPattern.push_back(/*the move we did in expand*/) // wot?
+    
+
+    double delta = rool_out(exp_node,true,v_Graphs,minF,&currentPattern,
+                            );
+    update_ancestors(exp_node,delta);
+  }
+
   return returnStatus;
 }
 

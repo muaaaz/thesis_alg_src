@@ -263,8 +263,8 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
       tmp.frequency = it->second.freq;
       for ( uint iGraph = 0 ; iGraph < it->second.v_SparseOcc.size() ; iGraph++ )
         tmp.nbOcc += it->second.v_SparseOcc.at(iGraph).size;
-      valid_extenstions->insert(make_pair(it->first,tmp));
-      children_nodes   ->insert(make_pair(it->first,NULL));
+      root->valid_extenstions->insert(make_pair(it->first,tmp));
+      root->children_nodes->insert(make_pair(it->first,(MCTS_node*)(NULL)));
 
       // Apply recursive call
       //returnStatus = search( v_Graphs, minFreq, &currentPattern,

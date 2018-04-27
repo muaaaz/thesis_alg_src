@@ -148,13 +148,14 @@ public:
 
   MCTS_node* select(MCTS_node* cur); // static??
 
-  MCTS_node* expand(MCTS_node* cur);
+  MCTS_node* expand(MCTS_node* cur,GToken& ext);
 
   double rool_out(MCTS_node* cur, 
                     bool first_level,
-                    vector<GGraph*>* v_Graphs,
-                    GGlobFreq       &minFreq,    //Mininmum global frequency
+                    vector<GGraph*>& v_Graphs,
+                    GGlobFreq       minFreq,    //Mininmum global frequency
                     GPattern*        pPattern,
+                    const GToken&    lastExt, 
                     GTokenData      &tokenData,
                     GExtensionData  &suppData,   // Tmp variable, supposed frequency
                     GExtensionData  &prevData);

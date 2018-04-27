@@ -245,7 +245,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
 
   MCTS_node* root = new MCTS_node();
 
-  int returnStatus = 0;
+  //int returnStatus = 0;
   // Instanciate iterator
   map<GToken, GTokenData, GTokenGt>::iterator it = m_TokenData.begin();
   // Instanciate current pattern object
@@ -270,31 +270,44 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
       //returnStatus = search( v_Graphs, minFreq, &currentPattern,
        //                      it->first, it->second, tmp, first, iClassDB );
 
-      if ( returnStatus != 0 )
-        return returnStatus;
+      //if ( returnStatus != 0 )
+       // return returnStatus;
     }
     // Go to next edge possible edge
     it++;
   }
 
   int budget = 1994;
+  // the main loop
   while(budget--){
     GPattern currentPattern;
     currentPattern.pGraph->graphID   = freqPatternId;
     currentPattern.pGraph->className = "FrequentPattern";
-    MCTS_node* sel_node = select(root);
-    MCTS_node* exp_node = expand(sel_node);
+    MCTS_node* selcted_node = select(root);
+    GToken ext;
+    MCTS_node* exp_node = expand(selcted_node,ext);
+    GExtensionData first;
 
-    ///we have to make the expand function save the action that cuase the expansion. wot??
-    currentPattern.push_back(/*the move we did in expand*/) // wot?
-    
+    if(exp_node != root)
+    {
+        // we have to change the rool out parameters WOT?
 
-    double delta = rool_out(exp_node,true,v_Graphs,minF,&currentPattern,
-                            );
+    }
+
+    double delta = rool_out(exp_node,
+                            true,
+                            v_Graphs,
+                            minF,
+                            &currentPattern,
+                            ext,
+                            m_TokenData[ext],
+                            root->valid_extenstions->operator[](ext),
+                            first);
+
     update_ancestors(exp_node,delta);
   }
 
-  return returnStatus;
+  return 0;
 }
 
 // End of Grima::search( vector<GGraph*>                   &v_Graphs,
@@ -332,11 +345,13 @@ MCTS_node* MCTSGrima::select(MCTS_node* cur){
   return cur; //should change this???
 }
 
-MCTS_node* MCTSGrima::expand(MCTS_node* cur){
-  if(cur->is_fully_expanded){
+MCTS_node* MCTSGrima::expand(MCTS_node* cur,GToken& ext){
+  
+  
+  //if(cur->is_fully_expanded){ this will happen we we reach the max deep only
     //do soething that make the algorithm dont come here again
-  }
-  MCTS_node* new_child;
+  //}
+  MCTS_node* new_child = new MCTS_node();
   // we should have the list of the possible extentions here
   // choose as the algorithm says
 
@@ -346,33 +361,127 @@ MCTS_node* MCTSGrima::expand(MCTS_node* cur){
       cur->is_fully_expanded = true;
       break;
     }
-    if(it->second == NULL)
-      
-
+    if(it->second == NULL){
+      it->second = new_child;
+      ext = it->first;
+      return new_child;
+    }
     it++;
   }
-  if(cur->is_fully_expanded){
-    //do soething that make the algorithm dont come here again
-  }
 
-  return new_child;
+  //this part sould nerver be excuted
+  cerr<<"Expanding a fully expanded node! WOT?\n";
+  exit(1);
+  //if(cur->is_fully_expanded){
+  //  //do soething that make the algorithm dont come here again
+  //}
+
+  //return new_child;
 }
 
 double MCTSGrima::rool_out(MCTS_node* cur, 
                     bool first_level,
-                    vector<GGraph*>* v_Graphs,
-                    GGlobFreq       &minFreq,    //Mininmum global frequency
+                    vector<GGraph*>& v_Graphs,
+                    GGlobFreq       minFreq,    //Mininmum global frequency
                     GPattern*        pPattern,
+                    const GToken&    lastExt, 
                     GTokenData      &tokenData,
                     GExtensionData  &suppData,   // Tmp variable, supposed frequency
                     GExtensionData  &prevData )
 {
 
-  // pPattern the expanded pattern
-  // tokenData is the occlist of the parent pattern
+  /*************************************************************************/
+  // === First step : Add extension
+  // Nb of occurence of Pattern ( To check if P is close)
+  GGlobFreq nbOcc        = 0;
+  // current frequency of P
+  GGlobFreq currentFreq  = 0;
+  // Store last graph tID to compute frequency
+  bool firstOcc          = true;
+  uint lastOccGraphID    = 0;
+  GTid lastOccGraphMemId = NULL;
+  clock_t  firstTickTracker  = 0;
 
-  // calculate the possible valid extention and but them in a map
+  // Add the extension to the pattern
+  pPattern->push_back( lastExt, false );
 
+  // === Second step : Check if P is canonical
+  firstTickTracker = clock();
+  //  cout << pPattern->v_Tokens << endl;
+
+  bool isCanonical = pPattern->isCanonincal();
+
+  canonicalTick += clock() - firstTickTracker;
+
+
+  //----------------------------------------------------------------------------
+  // CANONICAL TEST STOP
+  if ( !isCanonical )
+  {
+    // here compute the corresponding canonical code and do something with it
+    
+    // If extension is not canonical, we should not go deeper
+    //pPattern->pop_back( false );
+    // Exit search. We will find this pattern later
+    //return 0;
+  }
+  
+  if(false)
+  {
+    //----------------------------------------------------------------------------
+    //PATTERN NB TIME NODE LIMIT
+    if ( PARAM.TIMELIMIT != -1
+        && ( pPattern->maxTCoord - pPattern->minTCoord > PARAM.TIMELIMIT - 1 ) )
+    {
+      // If extension is not canonical, we should not go deeper
+      pPattern->pop_back( false );
+      // Exit search. We will find this pattern later
+      return 0;
+    }
+    //----------------------------------------------------------------------------
+    //PATTERN NB NODE LIMIT STOP
+    if ( PARAM.NODELIMIT != -1
+        && (int)pPattern->pGraph->v_Nodes.size() > PARAM.NODELIMIT )
+    {
+      // If extension is not canonical, we should not go deeper
+      pPattern->pop_back( false );
+      // Exit search. We will find this pattern later
+      return 0;
+    }
+    if ( PARAM.DIRECT_HOLEMINING
+              && lastExt.nodeLabelFrom == PARAM.MAXLBL && lastExt.nodeLabelDest == PARAM.MAXLBL
+              && lastExt.direction == gForward )
+    {
+      // If extension is not canonical, we should not go deeper
+      pPattern->pop_back( false );
+      // Exit search. We will find this pattern later
+      return 0;
+    }
+    //----------------------------------------------------------------------------
+    //TIMEOUT STOP
+    if ( PARAM.TIMEOUT != -1
+        && ( clock() - firstTick ) / CLOCKS_PER_SEC >= round(PARAM.TIMEOUT*3600) )
+    {
+      cout << " Mining timeout reached during class : " << v_Graphs.at(0)->className << endl;
+      cout << " Time of mining : " << ( clock() - firstTick ) / CLOCKS_PER_SEC << endl;
+      pPattern->pop_back( false );
+      return -1;
+    }
+    //----------------------------------------------------------------------------
+    // NB PATTERN STOP
+    if ( PARAM.NBPATLIMIT != -1
+        && (int)v_PatternCurrClass.size() == PARAM.NBPATLIMIT )
+    {
+      cout << " Limit of number of pattern reached during class : " << v_Graphs.at(0)->className << endl;
+      pPattern->pop_back( false );
+      return -2;
+    }
+    // pPattern the expanded pattern
+    //tokenData is the occlist of the parent pattern
+    //calculate the possible valid extention and but them in a map
+  }
+ 
+  
   // Object with map of possible extensions
   GExtensionCollect extCollect( minFreq );
   // Object that store pattern and occurences
@@ -383,16 +492,6 @@ double MCTSGrima::rool_out(MCTS_node* cur,
   /* Number of sparse set (i.e. number of graphs in which first edge of pattern
    * is frequent */
   
-  //calculate the feruancy of a pattern and the possible expansion at the same time
-  // Nb of occurence of Pattern ( To check if P is close)
-  GGlobFreq nbOcc        = 0;
-  // current frequency of P
-  GGlobFreq currentFreq  = 0;
-  // Store last graph tID to compute frequency
-  bool firstOcc          = true;
-  uint lastOccGraphID    = 0;
-  GTid lastOccGraphMemId = NULL;
-  clock_t  firstTickTracker  = 0;
   int nbGraphSparse = tokenData.v_SparseOcc.size();
   for ( int iGraph = 0 ; iGraph < nbGraphSparse; iGraph++ )
   {
@@ -539,117 +638,45 @@ double MCTSGrima::rool_out(MCTS_node* cur,
 
   cur->valid_extenstions->clear();
 
-  for ( map<GToken, GExtensionData, GTokenGt>::iterator it= extCollect.m_Extensions.begin();it != extCollect.m_Extensions.end(); it++ )
+  for ( map<GToken, GExtensionData, GTokenGt>::iterator it= extCollect.m_Extensions.begin();
+        it != extCollect.m_Extensions.end(); it++ )
   {
     if ( it->second.frequency >= minFreq )
     {
-      
-      // Recursive call
+      // save thje possible moves on the mape
       if ( it->first.angle != GNOANGLE )
       {
-        //isLeaf = search( v_Graphs, minFreq, pPattern,
-        //                 it->first, tokenData, it->second, suppData,iClassDB );
-        
-        GToken lastExt = it->first;
-         //possible expantion loop
-      
-        // Add the extension to the pattern
-        pPattern->push_back( lastExt, false );
-
-        // === Second step : Check if P is canonical
-        firstTickTracker = clock();
-        //  cout << pPattern->v_Tokens << endl;
-
-        bool isCanonical = pPattern->isCanonincal();
-
-        canonicalTick += clock() - firstTickTracker;
-
-        //check some stuff
-        {
-          //----------------------------------------------------------------------------
-          // CANONICAL TEST STOP
-          if ( !isCanonical )
-          {
-            // If extension is not canonical, we should not go deeper
-            pPattern->pop_back( false );
-            // Exit search. We will find this pattern later
-            continue;
-          }
-          //----------------------------------------------------------------------------
-          // PATTERN NB TIME NODE LIMIT
-          if ( PARAM.TIMELIMIT != -1
-              && ( pPattern->maxTCoord - pPattern->minTCoord > PARAM.TIMELIMIT - 1 ) )
-          {
-            // If extension is not canonical, we should not go deeper
-            pPattern->pop_back( false );
-            // Exit search. We will find this pattern later
-            continue;
-          }
-          //----------------------------------------------------------------------------
-          // PATTERN NB NODE LIMIT STOP
-          if ( PARAM.NODELIMIT != -1
-              && (int)pPattern->pGraph->v_Nodes.size() > PARAM.NODELIMIT )
-          {
-            // If extension is not canonical, we should not go deeper
-            pPattern->pop_back( false );
-            // Exit search. We will find this pattern later
-            continue;
-          }
-          if ( PARAM.DIRECT_HOLEMINING
-                    && lastExt.nodeLabelFrom == PARAM.MAXLBL && lastExt.nodeLabelDest == PARAM.MAXLBL
-                    && lastExt.direction == gForward )
-          {
-            // If extension is not canonical, we should not go deeper
-            pPattern->pop_back( false );
-            // Exit search. We will find this pattern later
-            continue;
-          }
-
-          //----------------------------------------------------------------------------
-          // TIMEOUT STOP
-          if ( PARAM.TIMEOUT != -1
-              && ( clock() - firstTick ) / CLOCKS_PER_SEC >= round(PARAM.TIMEOUT*3600) )
-          {
-            cout << " Mining timeout reached during class : " << v_Graphs->at(0)->className << endl;
-            cout << " Time of mining : " << ( clock() - firstTick ) / CLOCKS_PER_SEC << endl;
-            pPattern->pop_back( false );
-            return -1;
-          }
-          //----------------------------------------------------------------------------
-          // NB PATTERN STOP
-          if ( PARAM.NBPATLIMIT != -1
-              && (int)v_PatternCurrClass.size() == PARAM.NBPATLIMIT )
-          {
-            cout << " Limit of number of pattern reached during class : " << v_Graphs->at(0)->className << endl;
-            pPattern->pop_back( false );
-            return -2;
-          }
-        }
-
-
-        cur->valid_extenstions->insert(make_pair(lastExt,it->second));
-
-        // Restore the value of pPattern
-        pPattern->pop_back( false );
+        //cur->valid_extenstions->insert(make_pair(lastExt,it->second));
       }
-      
+      else
+        extCollect.m_Extensions.erase(it); 
     }
+    else
+      extCollect.m_Extensions.erase(it);
   }
   
+  cur->valid_extenstions = new map<GToken, GExtensionData, GTokenGt> (extCollect.m_Extensions);
   // chosse one child and the clear children list ?
 
   map<GToken,GExtensionData,GTokenGt> ::iterator it1;// = get_random_element();// yet to be writen
     //go for a random child
-  pPattern->push_back( it1->first, false );
+
   MCTS_node* new_child = new MCTS_node();
   cur->children_nodes->operator[](it1->first) = new_child;
   
   double ret;
-  if(true) // a stopping condition needed
+  if(true) // a stopping condition needed OR we continue until the pattern is not frequent? Wot?
     ret = rool_out(new_child,
                   false, 
-                  v_Graphs, minFreq, pPattern,
-                  tokenData, it1->second,suppData);
+                  v_Graphs, 
+                  minFreq, 
+                  pPattern,
+                  it1->first,
+                  tokenData, 
+                  it1->second,
+                  suppData);
+  else
+    return rand(); // we should about a good return value for this
 
 
   // because we only save the first node occList other wise no memory will be enough

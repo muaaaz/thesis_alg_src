@@ -68,16 +68,20 @@ public:
   double Q;
   //
   bool is_fully_expanded;
+  //
+  bool occ_list_is_computed;
   // possible extentions
   map<GToken, MCTS_node*, GTokenGt>* children_nodes;
   
   // occurance lists
   //GTokenData tokenData;
 
-  // coninical extenstions
+  // remaining coninical extenstions
   vector<pair<GToken, GExtensionData> > valid_extenstions;
+  GTokenData      node_tokenData;
 
-  
+
+
   // Public Structure & Typedef ______________________________________________//
   // Public Constructor/Desctructor __________________________________________//
   /**
@@ -86,6 +90,8 @@ public:
    * Initialize variables and create new GVocab object
    */
   MCTS_node();
+
+  MCTS_node(MCTS_node* _parent_);
 
   /**
    * @brief ~MCTS

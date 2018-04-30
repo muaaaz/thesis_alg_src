@@ -264,7 +264,6 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
       for ( uint iGraph = 0 ; iGraph < it->second.v_SparseOcc.size() ; iGraph++ )
         tmp.nbOcc += it->second.v_SparseOcc.at(iGraph).size;
       root->valid_extenstions.push_back(make_pair(it->first,tmp));
-      root->children_nodes->insert(make_pair(it->first,(MCTS_node*)(NULL)));
 
       // Apply recursive call
       //returnStatus = search( v_Graphs, minFreq, &currentPattern,
@@ -282,28 +281,21 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
   while(budget--){
     GPattern currentPattern;
     currentPattern.pGraph->graphID   = freqPatternId;
-    currentPattern.pGraph->className = "FrequentPattern";
+    currentPattern.pGraphfirst->className = "FrequentPattern";
     MCTS_node* selcted_node = select(root);
     GToken ext;
-    MCTS_node* exp_node = expand(selcted_node,ext);
+    GExtensionData tmp;
+    
+    MCTS_node* exp_node = expand(selcted_node,ext,tmp);
     GExtensionData first;
 
-    if(exp_node != root)
-    {
-        // we have to change the rool out parameters WOT?
+    //if(exp_node != root)
+    //{
+    //    // we have to change the rool out parameters? WOT? noooo
 
-    }
-    GExtensionData tmp;
-    for(int i=0;i<root->valid_extenstions.size();++i)
-    {
-      if(root->valid_extenstions[i].first == ext){
-        tmp = root->valid_extenstions[i].second;
-        break;
-      }
-    }
+    //}
 
-    double delta = rool_out(exp_node,
-                            true,
+    double delta = roll_out(exp_node,
                             v_Graphs,
                             minF,
                             &currentPattern,
@@ -353,42 +345,31 @@ MCTS_node* MCTSGrima::select(MCTS_node* cur){
   return cur; //should change this???
 }
 
-MCTS_node* MCTSGrima::expand(MCTS_node* cur,GToken& ext){
-  
-  
-  //if(cur->is_fully_expanded){ this will happen we we reach the max deep only
-    //do soething that make the algorithm dont come here again
-  //}
-  MCTS_node* new_child = new MCTS_node();
-  // we should have the list of the possible extentions here
-  // choose as the algorithm says
+// we we want to expand a node we expect that teh node has it valid_extenstions ready but not all the children_nodes
 
-  map< GToken ,MCTS_node*, GTokenGt>::iterator it = cur->children_nodes->begin();
-  while(true){
-    if(it == cur->children_nodes->end()){
-      cur->is_fully_expanded = true;
-      break;
-    }
-    if(it->second == NULL){
-      it->second = new_child;
-      ext = it->first;
-      return new_child;
-    }
-    it++;
+MCTS_node* MCTSGrima::expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp){
+  
+  if(cur->valid_extenstions.size() == 0){
+    //this part sould nerver be excuted
+    cerr<<"Expanding a fully expanded node! WOT?\n";
+    exit(1);
   }
 
-  //this part sould nerver be excuted
-  cerr<<"Expanding a fully expanded node! WOT?\n";
-  exit(1);
-  //if(cur->is_fully_expanded){
-  //  //do soething that make the algorithm dont come here again
-  //}
+  MCTS_node* new_child = new MCTS_node(cur);
 
-  //return new_child;
+  // chose the last expansion "the vector is shuffled os it's a random choise"
+  ext = cur->valid_extenstions[cur->valid_extenstions.size()-1].first;
+  tmp = cur->valid_extenstions[cur->valid_extenstions.size()-1].second;
+  //remove the choise from the list of available expansions
+  cur->valid_extenstions.pop_back();
+  
+  if(cur->valid_extenstions.size() == 0)
+    cur->is_fully_expanded = true;
+
+  return new_child;
 }
 
-double MCTSGrima::rool_out(MCTS_node* cur, 
-                    bool first_level,
+double MCTSGrima::roll_out(MCTS_node* cur, 
                     vector<GGraph*>& v_Graphs,
                     GGlobFreq       minFreq,    //Mininmum global frequency
                     GPattern*        pPattern,
@@ -490,7 +471,8 @@ double MCTSGrima::rool_out(MCTS_node* cur,
   }
  
   // if this is the first time we go into this node "of it's not in the first level of the rool out"
-  if(cur->valid_extenstions.size() == 0){
+  if(!cur->occ_list_is_computed)
+  {
     // Object with map of possible extensions
     GExtensionCollect extCollect( minFreq );
     // Object that store pattern and occurences
@@ -500,8 +482,7 @@ double MCTSGrima::rool_out(MCTS_node* cur,
     subGraphIso.clearOccList();
     /* Number of sparse set (i.e. number of graphs in which first edge of pattern
     * is frequent */
-    
-
+  
     /// this is the most expensive part of the code!
 
     int nbGraphSparse = tokenData.v_SparseOcc.size();
@@ -568,7 +549,9 @@ double MCTSGrima::rool_out(MCTS_node* cur,
         }
       }
     }
-
+    // sace the occ list in the node
+    cur->node_tokenData = GTokenData(tokenData);
+    cur->occ_list_is_computed = true;
 
     //here tokenData contains the occlist of the current patarn
     // and extCollect contains all the possible expansions
@@ -646,9 +629,9 @@ double MCTSGrima::rool_out(MCTS_node* cur,
       }
     }
 
-    /********************* Make recurive call to extend P ********************/
+    /********************* store the possible expansions ********************/
 
-    
+
 
     for ( map<GToken, GExtensionData, GTokenGt>::iterator it= extCollect.m_Extensions.begin();
           it != extCollect.m_Extensions.end(); it++ )
@@ -665,7 +648,14 @@ double MCTSGrima::rool_out(MCTS_node* cur,
     }
     //no need for this
     extCollect.m_Extensions.clear();
-    //cur->valid_extenstions shuffle here
+   
+    // we shuffle to make the chose of the action in the simulation random. Good?
+    random_shuffle ( cur->valid_extenstions.begin(), cur->valid_extenstions.end() );
+  
+  }
+  // if it's not the first time we visite this node: restore the occ list from the node
+  else{
+    tokenData = GTokenData(cur->node_tokenData);
   }
   
 
@@ -676,16 +666,13 @@ double MCTSGrima::rool_out(MCTS_node* cur,
   // chose the last element
   pair<GToken,GExtensionData> sel_move = cur->valid_extenstions[cur->valid_extenstions.size()-1];
   // delete the last element
-  cur->valid_extenstions.pop_back();
-
 
   MCTS_node* new_child = new MCTS_node();
   cur->children_nodes->operator[](sel_move.first) = new_child;
   
   double ret;
   if(true) // a stopping condition needed OR we continue until the pattern is not frequent? Wot?
-    ret = rool_out(new_child,
-                  false, 
+    ret = roll_out(new_child,
                   v_Graphs, 
                   minFreq, 
                   pPattern,
@@ -697,15 +684,8 @@ double MCTSGrima::rool_out(MCTS_node* cur,
     return rand(); // we should about a good return value for this
 
 
-  // because we only save the first node occList other wise no memory will be enough
-  // which means that here is where the actual expansion is happening
-  if(!first_level){
-    //clear everything that you allocate here
-    cur->valid_extenstions.clear();
-    cur->children_nodes->clear();
-    delete cur->children_nodes;
-    delete new_child;
-  }
+  delete cur->children_nodes;
+  delete new_child;
 
   return ret;
 }

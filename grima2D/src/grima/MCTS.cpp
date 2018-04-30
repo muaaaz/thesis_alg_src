@@ -58,7 +58,23 @@ MCTS_node::MCTS_node():
   parent(NULL),
   N_node(0),
   Q(-1),
-  is_fully_expanded(false)
+  is_fully_expanded(false),
+  occ_list_is_computed(false)
+{
+  /*
+   * TODO : RD
+   * Copy Desc
+   */
+  children_nodes    = new map<GToken, MCTS_node*,     GTokenGt>();
+  valid_extenstions = vector<pair<GToken, GExtensionData> > ();
+}
+
+MCTS_node::MCTS_node(MCTS_node* _parent_):
+  parent(_parent_),
+  N_node(0),
+  Q(-1),
+  is_fully_expanded(false),
+  occ_list_is_computed(false)
 {
   /*
    * TODO : RD
@@ -69,13 +85,14 @@ MCTS_node::MCTS_node():
 }
 
 
+
 MCTS_node::~MCTS_node()
 {
   /*
    * TODO : RD
    * Copy Desc
    */
-  children_nodes->clear();
+
   valid_extenstions.clear();
   delete children_nodes;
 }

@@ -99,6 +99,16 @@ struct GToken {
   {
     // Nothing to do here
   }
+
+  bool operator == (const GToken ob){
+    return direction == ob.direction &&
+            nodeFrom == ob.nodeFrom &&
+            nodeDest == ob.nodeDest &&
+            angle == ob.angle &&
+            nodeLabelFrom == ob.nodeLabelFrom &&
+            edgeLabel == ob.edgeLabel &&
+            nodeLabelDest == ob.nodeLabelDest;
+  }
 };
 
 extern struct GToken tmpT1;

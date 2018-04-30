@@ -6,7 +6,7 @@ DATE = $(shell date +'%y.%m.%d-%H.%M.%S')
 ####### Compiler, tools and options
 CC            = g++
 DEFINES       =
-CFLAGS        = -m64 -pipe -std=c++0x -O3 -Wall -W $(DEFINES)
+CFLAGS        = -g -m64 -pipe -std=c++0x -O3 -Wall -W $(DEFINES)
 INCPATH       = -I./src -I/usr/local/include
 LINK          = g++
 LFLAGS        = -L/usr/local/lib -Wl,-R /usr/local/lib '-Wl,-R $$ORIGIN'

@@ -75,7 +75,7 @@ public:
   //GTokenData tokenData;
 
   // coninical extenstions
-  map<GToken, GExtensionData, GTokenGt>* valid_extenstions;
+  vector<pair<GToken, GExtensionData> > valid_extenstions;
 
   
   // Public Structure & Typedef ______________________________________________//

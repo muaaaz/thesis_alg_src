@@ -65,7 +65,7 @@ MCTS_node::MCTS_node():
    * Copy Desc
    */
   children_nodes    = new map<GToken, MCTS_node*,     GTokenGt>();
-  valid_extenstions = new map<GToken, GExtensionData, GTokenGt>();
+  valid_extenstions = vector<pair<GToken, GExtensionData> > ();
 }
 
 
@@ -76,7 +76,6 @@ MCTS_node::~MCTS_node()
    * Copy Desc
    */
   children_nodes->clear();
-  valid_extenstions->clear();
+  valid_extenstions.clear();
   delete children_nodes;
-  delete valid_extenstions;
 }

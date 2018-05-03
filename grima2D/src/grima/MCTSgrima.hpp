@@ -144,9 +144,9 @@ public:
 
   inline double UCB(MCTS_node* cur, MCTS_node* child);
 
-  MCTS_node* best_child(MCTS_node* cur);
+  MCTS_node* best_child(MCTS_node* cur,GToken& ext);
 
-  MCTS_node* select(MCTS_node* cur); // static??
+  MCTS_node* select(MCTS_node* cur, GPattern* pPattern); 
 
   MCTS_node* expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp);
 

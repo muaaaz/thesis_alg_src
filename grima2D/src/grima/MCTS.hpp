@@ -78,7 +78,7 @@ public:
 
   // remaining coninical extenstions
   vector<pair<GToken, GExtensionData> > valid_extenstions;
-  GTokenData      node_tokenData;
+  GTokenData&      node_tokenData;
 
 
 

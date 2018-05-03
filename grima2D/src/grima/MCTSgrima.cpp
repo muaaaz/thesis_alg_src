@@ -245,7 +245,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
 
   MCTS_node* root = new MCTS_node();
 
-  //int returnStatus = 0;
+  // int returnStatus = 0;
   // Instanciate iterator
   map<GToken, GTokenData, GTokenGt>::iterator it = m_TokenData.begin();
   // Instanciate current pattern object
@@ -264,6 +264,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
       for ( uint iGraph = 0 ; iGraph < it->second.v_SparseOcc.size() ; iGraph++ )
         tmp.nbOcc += it->second.v_SparseOcc.at(iGraph).size;
       root->valid_extenstions.push_back(make_pair(it->first,tmp));
+      root->node_tokenData = it->second;
 
       // Apply recursive call
       //returnStatus = search( v_Graphs, minFreq, &currentPattern,
@@ -278,30 +279,33 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
 
   int budget = 1994;
   // the main loop
-  while(budget--){
+  while(budget--)
+  {
+    
     GPattern currentPattern;
     currentPattern.pGraph->graphID   = freqPatternId;
-    currentPattern.pGraphfirst->className = "FrequentPattern";
-    MCTS_node* selcted_node = select(root);
+    currentPattern.pGraph->className = "FrequentPattern";
+    MCTS_node* selcted_node = select(root,&currentPattern);
+
     GToken ext;
-    GExtensionData tmp;
-    
-    MCTS_node* exp_node = expand(selcted_node,ext,tmp);
+    GExtensionData tmp_GExtensionData;
+
+    MCTS_node* exp_node = expand(selcted_node,ext,tmp_GExtensionData);
     GExtensionData first;
 
-    //if(exp_node != root)
-    //{
-    //    // we have to change the rool out parameters? WOT? noooo
-
-    //}
-
+    GTokenData tmp_GTokenData;
+    if(exp_node == root)
+      tmp_GTokenData = m_TokenData[ext];
+    else
+      tmp_GTokenData = exp_node->node_tokenData;
+        
     double delta = roll_out(exp_node,
                             v_Graphs,
                             minF,
                             &currentPattern,
                             ext,
-                            m_TokenData[ext],
-                            tmp,
+                            tmp_GTokenData,
+                            tmp_GExtensionData,
                             first);
 
     update_ancestors(exp_node,delta);
@@ -319,7 +323,7 @@ inline double MCTSGrima::UCB(MCTS_node* cur, MCTS_node* child){
   return child->Q + 2*PARAM.C_p*sqrt(2*(log(cur->N_node))/child->N_node); // logaritem base??
 }
 
-MCTS_node* MCTSGrima::best_child(MCTS_node* cur){
+MCTS_node* MCTSGrima::best_child(MCTS_node* cur,GToken& ext){
     //this functio will return the best child of the current MCTS node
     MCTS_node* ret = NULL;
     double cur_UCB = -1, mx_UCB = -1 ;
@@ -327,19 +331,27 @@ MCTS_node* MCTSGrima::best_child(MCTS_node* cur){
     for(it = cur->children_nodes->begin();it != cur->children_nodes->end() ;it++)
     {
       cur_UCB = UCB(cur,it->second);
-      if( cur_UCB > mx_UCB)
-        mx_UCB = cur_UCB, ret = it->second;
+      if( cur_UCB > mx_UCB){
+        mx_UCB = cur_UCB;
+        ret = it->second;
+        ext = it->first;
+      }
     }
     return ret;
 }
 
-MCTS_node* MCTSGrima::select(MCTS_node* cur){
+MCTS_node* MCTSGrima::select(MCTS_node* cur, GPattern* pPattern){
   
   int mx_depth = 200;
-  while(mx_depth--){ // some stopping condition
+
+  GToken ext;
+  while(mx_depth--){ // some stopping condition should we change this?
+    
     if(!cur->is_fully_expanded)
       return cur;
-    cur = best_child(cur);
+
+    cur = best_child(cur,ext);
+    pPattern->push_back(ext,false);
   }
 
   return cur; //should change this???

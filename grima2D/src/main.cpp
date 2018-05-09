@@ -279,6 +279,9 @@ param PARAM = param();
   * @param argv vector of arg
   * @return 0 if no issu, 1 otherwise
 */
+
+// ./grima2D -o /udd/mtwaty/Downloads/thesis_alg_src/grima2D/output -T 1 -f 0.5 in.gri
+
 int main( int argc, char **argv )
 {
   cout << "#==== START OF GRIMA !" << endl;

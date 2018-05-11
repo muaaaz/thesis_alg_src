@@ -93,6 +93,7 @@ MCTS_node::~MCTS_node()
    * Copy Desc
    */
 
+  node_tokenData.v_SparseOcc.clear();
   valid_extenstions.clear();
   delete children_nodes;
 }

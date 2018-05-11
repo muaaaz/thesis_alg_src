@@ -50,6 +50,7 @@ using namespace std;
 GToken tmpT1 = GToken();
 GToken tmpT2 = GToken();
 
+int de = 0;
 //================================= CLASS ====================================//
 //---- PUBLIC ----------------------------------------------------------------//
 // Public CONSTANTS __________________________________________________________//
@@ -296,36 +297,40 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
   while(budget--)
   {
    
-    GPattern currentPattern;
-    currentPattern.pGraph->graphID   = freqPatternId;
-    currentPattern.pGraph->className = "FrequentPattern";
-    MCTS_node* selcted_node = select(root,&currentPattern);
+    GPattern* currentPattern = new GPattern();
+    currentPattern->pGraph->graphID   = freqPatternId;
+    currentPattern->pGraph->className = "FrequentPattern";
+    MCTS_node* selcted_node = select(root,currentPattern);
 
     GToken ext;
     GExtensionData tmp_GExtensionData;
 
     MCTS_node* exp_node = expand(selcted_node,ext,tmp_GExtensionData);
+    
+    selcted_node->children_nodes->insert(make_pair(ext,exp_node));
+    exp_node->parent = selcted_node;
+
     GExtensionData first;
-
     GTokenData tmp_GTokenData;
-
 
     if(selcted_node == root)
       tmp_GTokenData = m_TokenData[ext];
     else
-      tmp_GTokenData = exp_node->node_tokenData;
+      tmp_GTokenData = selcted_node->node_tokenData;
 
-    cerr<<tmp_GTokenData.v_SparseOcc.size()<<" ??\n";
+    cerr<<"tmp_GTokenData size: "<<tmp_GTokenData.v_SparseOcc.size()<<"\n";
+    de = 0;
     double delta = roll_out(exp_node,
                             v_Graphs,
                             minF,
-                            &currentPattern,
+                            currentPattern,
                             ext,
                             tmp_GTokenData,
                             tmp_GExtensionData,
                             first);
 
     update_ancestors(exp_node,delta);
+    delete currentPattern;
   }
 
   return 0;
@@ -368,7 +373,9 @@ MCTS_node* MCTSGrima::select(MCTS_node* cur, GPattern* pPattern){
       return cur;
     cerr<<"go deeper\n";
     cur = best_child(cur,ext);
+    cerr<<cur<<endl;
     pPattern->push_back(ext,false);
+    
   }
 
   return cur; //should change this???
@@ -380,7 +387,6 @@ MCTS_node* MCTSGrima::expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp){
   
   if(cur->valid_extenstions.size() == 0){
     //this part sould nerver be excuted
-    cerr<<cur->valid_extenstions.size()<<endl;
     cerr<<"Expanding a fully expanded node! WOT?\n";
     exit(1);
   }
@@ -394,7 +400,7 @@ MCTS_node* MCTSGrima::expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp){
   cur->valid_extenstions.pop_back();
   
   if(cur->valid_extenstions.size() == 0)
-    cur->is_fully_expanded = true;
+    cur->is_fully_expanded = true,cerr<<"ONE node is fully expanded!!!!\n";
 
   return new_child;
 }
@@ -421,19 +427,21 @@ double MCTSGrima::roll_out(MCTS_node* cur,
   GTid lastOccGraphMemId = NULL;
   clock_t  firstTickTracker  = 0;
 
-  cerr<<"----------------------here1\n";
+
   // Add the extension to the pattern
   pPattern->push_back( lastExt, false );
-  cerr<<"----------------------here2\n";
+  if(!(de%100))
+    cerr<<de<<endl;
+  de++;
   // === Second step : Check if P is canonical
   firstTickTracker = clock();
   //  cout << pPattern->v_Tokens << endl;
 
-  bool isCanonical = pPattern->isCanonincal();
+  bool isCanonical = 1;//pPattern->isCanonincal();
 
   canonicalTick += clock() - firstTickTracker;
 
-
+  
   //----------------------------------------------------------------------------
   // CANONICAL TEST STOP
   if ( !isCanonical )
@@ -502,200 +510,203 @@ double MCTSGrima::roll_out(MCTS_node* cur,
   }
  
   // if this is the first time we go into this node "of it's not in the first level of the rool out"
-  if(!cur->occ_list_is_computed)
+  //if(!cur->occ_list_is_computed)
+  //{
+  // Object with map of possible extensions
+  GExtensionCollect extCollect( minFreq );
+  // Object that store pattern and occurences
+  GSubgraphIso subGraphIso( pPattern, pPattern->v_OccList );
+  // Clear occurence list before searching new occurency as pPattern should
+  // already be stored in GVocab.
+  subGraphIso.clearOccList();
+  /* Number of sparse set (i.e. number of graphs in which first edge of pattern
+  * is frequent */
+
+  /// this is the most expensive part of the code!
+
+
+  int nbGraphSparse = tokenData.v_SparseOcc.size();
+  for ( int iGraph = 0 ; iGraph < nbGraphSparse; iGraph++ )
   {
-    // Object with map of possible extensions
-    GExtensionCollect extCollect( minFreq );
-    // Object that store pattern and occurences
-    GSubgraphIso subGraphIso( pPattern, pPattern->v_OccList );
-    // Clear occurence list before searching new occurency as pPattern should
-    // already be stored in GVocab.
-    subGraphIso.clearOccList();
-    /* Number of sparse set (i.e. number of graphs in which first edge of pattern
-    * is frequent */
-  
-    /// this is the most expensive part of the code!
-    cerr<<"enter computer occ condition\n";
-
-    int nbGraphSparse = tokenData.v_SparseOcc.size();
-    for ( int iGraph = 0 ; iGraph < nbGraphSparse; iGraph++ )
+    // For each sparseset
+    // As the sparse set is modified, just create copy for the FOR LOOP
+    GSparseSet SparseOccTmp = tokenData.v_SparseOcc.at(iGraph);
+    // Get domain size
+    uint domainSize = SparseOccTmp.size;
+    for ( uint iDom = 0; iDom < domainSize  ; iDom++ )
     {
-      // For each sparseset
-      // As the sparse set is modified, just create copy for the FOR LOOP
-      GSparseSet SparseOccTmp = tokenData.v_SparseOcc.at(iGraph);
-      // Get domain size
-      uint domainSize = SparseOccTmp.size;
-      for ( uint iDom = 0; iDom < domainSize  ; iDom++ )
+      // For each edge in the domain of the sparse set
+      // Get map value of edge wearing pattern
+      uint map                  = SparseOccTmp.atDom(iDom);
+      GSparseSet::mapEdge mEdge = SparseOccTmp.atMap(map);
+      // Find if this edge wear an occurence of the pattern
+      firstTickTracker = clock();
+      bool findOcc = subGraphIso.run( SparseOccTmp.pGraph,
+                                      mEdge.nodeFrom,
+                                      mEdge.edgeId   );
+      subgraphisoTick += clock() - firstTickTracker;
+
+      if ( findOcc )
       {
-        // For each edge in the domain of the sparse set
-        // Get map value of edge wearing pattern
-        uint map                  = SparseOccTmp.atDom(iDom);
-        GSparseSet::mapEdge mEdge = SparseOccTmp.atMap(map);
-        // Find if this edge wear an occurence of the pattern
+        // If edge wears pattern
+        // Increment occurences counter
+        nbOcc++;
+        if ( firstOcc )
+        {
+          firstOcc = false;
+          // If first occurenc of pattern in graph
+          // Increment frequency counter to 1
+          currentFreq++;
+          // Get graph ID of this occurence
+          lastOccGraphID    = SparseOccTmp.graphID;
+          lastOccGraphMemId = SparseOccTmp.pGraph;
+
+        }
+        else if ( lastOccGraphID != SparseOccTmp.graphID
+                  && lastOccGraphMemId == SparseOccTmp.pGraph )
+        {
+          cerr << "ERROR - Error While managing graphID in sparseset" << endl;
+        }
+        else if ( lastOccGraphID != SparseOccTmp.graphID
+                  && lastOccGraphMemId != SparseOccTmp.pGraph )
+        {
+          // If last occurence was in another graph
+          // Increment frequency counter
+          currentFreq++;
+          // Get graph ID of this occurence
+          lastOccGraphID    = SparseOccTmp.graphID;
+          lastOccGraphMemId = SparseOccTmp.pGraph;
+        }
+        // Compute all extension of this occurence
         firstTickTracker = clock();
-        bool findOcc = subGraphIso.run( SparseOccTmp.pGraph,
-                                        mEdge.nodeFrom,
-                                        mEdge.edgeId   );
-        subgraphisoTick += clock() - firstTickTracker;
-
-        if ( findOcc )
-        {
-          // If edge wears pattern
-          // Increment occurences counter
-          nbOcc++;
-          if ( firstOcc )
-          {
-            firstOcc = false;
-            // If first occurenc of pattern in graph
-            // Increment frequency counter to 1
-            currentFreq++;
-            // Get graph ID of this occurence
-            lastOccGraphID    = SparseOccTmp.graphID;
-            lastOccGraphMemId = SparseOccTmp.pGraph;
-
-          }
-          else if ( lastOccGraphID != SparseOccTmp.graphID
-                    && lastOccGraphMemId == SparseOccTmp.pGraph )
-          {
-            cerr << "ERROR - Error While managing graphID in sparseset" << endl;
-          }
-          else if ( lastOccGraphID != SparseOccTmp.graphID
-                    && lastOccGraphMemId != SparseOccTmp.pGraph )
-          {
-            // If last occurence was in another graph
-            // Increment frequency counter
-            currentFreq++;
-            // Get graph ID of this occurence
-            lastOccGraphID    = SparseOccTmp.graphID;
-            lastOccGraphMemId = SparseOccTmp.pGraph;
-          }
-          // Compute all extension of this occurence
-          firstTickTracker = clock();
-          extCollect.process( subGraphIso );
-          extensionTick += clock() - firstTickTracker;
-        }
-        else
-        {
-          // If edge does not wear pattern "Remove" edge from domain in the sparse set
-          tokenData.v_SparseOcc.at(iGraph).remove(map) ;
-        }
+        extCollect.process( subGraphIso );
+        extensionTick += clock() - firstTickTracker;
+      }
+      else
+      {
+        // If edge does not wear pattern "Remove" edge from domain in the sparse set
+        tokenData.v_SparseOcc.at(iGraph).remove(map) ;
       }
     }
-
-     cerr<<"finish the two loops\n";
-    // sace the occ list in the node
-    cur->node_tokenData = GTokenData(tokenData);
-    cur->occ_list_is_computed = true;
-    
-    //here tokenData contains the occlist of the current patarn
-    // and extCollect contains all the possible expansions
-    /////////////////////////////////////////////////////
-
-    mappingExtTick += extCollect.mapExtTick;
-
-    if ( currentFreq != suppData.frequency )
-    {
-      cerr << "Computed Frequency not the same as supposed one" << endl;
-      cerr << "# Suppose freq : " << suppData.frequency << " VS "<<currentFreq<< endl;
-      cerr << "# Suppose occ  : " << suppData.nbOcc     << endl;
-      cerr << pPattern;
-      cerr << endl;
-      exit( EXIT_FAILURE );
-    }
-    if ( nbOcc != suppData.nbOcc && pPattern->v_Tokens.at(0).angle > 0  )
-    {
-      cerr << "Computed occurency not the same as supposed one" << endl;
-      cerr << "# Suppose freq : " << suppData.frequency << endl;
-      cerr << "# Suppose occ  : " << suppData.nbOcc     << endl;
-      uint i = 0;
-      while ( i < suppData.v_OccList.size() )
-      {
-        cerr << "o "
-            << suppData.v_OccList.at(i) << " "
-            << suppData.v_OccList.at(i+1) << " "
-            << suppData.v_OccList.at(i+2) << " " << endl;
-        i+=3;
-      }
-      cerr << pPattern;
-      cerr << endl;
-      exit( EXIT_FAILURE );
-    }
-    
-    /*************************************************************************/
-    {
-      // === Fourth step : Output pattern and occurences in output file
-      // Increment pattern Id
-      uint countPat = 0;
-      bool find     = false;
-      while ( countPat < vocabPattern->v_AllPatterns.size() && !find )
-      {
-        find = vocabPattern->comp( pPattern, vocabPattern->v_AllPatterns[countPat] );
-        if ( !find )
-          countPat++;
-      }
-
-      GPattern * tmpPat = new GPattern( *pPattern );
-      tmpPat->pGraph = new GGraph( *pPattern->pGraph );
-
-      if ( !find )
-      {
-        //v_NbPatternByClass.at( currClassIdx )++;
-
-        if ( prevData.frequency == suppData.frequency
-            && prevData.nbOcc == suppData.nbOcc )
-        {
-          nbClosedPat++;
-          nbTotalClosedPat++;
-        }
-        pPattern->pGraph->graphID = freqPatternId;
-        freqPatternId++;
-        vocabPattern->v_AllPatterns.push_back( tmpPat );
-      }
-      v_PatternCurrClass.push_back(tmpPat);
-
-      if ( PARAM.DEBUG_MODE )
-      {
-        // Write pattern in output file
-        cout << "# Suppose freq : " << suppData.frequency << endl;
-        cout << "# Suppose occ  : " << suppData.nbOcc     << endl;
-        cout << "p " << freqPatternId << endl;
-        cout << pPattern->v_Tokens << endl;
-      }
-    }
-
-    /********************* store the possible expansions ********************/
+  }
 
     
-
-    for ( map<GToken, GExtensionData, GTokenGt>::iterator it= extCollect.m_Extensions.begin();
-          it != extCollect.m_Extensions.end(); it++ )
-    {
-      if ( it->second.frequency >= minFreq )
-      {
-        // save thje possible moves on the mape
-        if ( it->first.angle != GNOANGLE )
-        {
-          cur->valid_extenstions.push_back(make_pair(it->first,it->second));
-        }
-      }
-      
-    }
-    //no need for this
-    extCollect.m_Extensions.clear();
-   
-    // we shuffle to make the chose of the action in the simulation random. Good?
-    random_shuffle ( cur->valid_extenstions.begin(), cur->valid_extenstions.end() );
+  // sace the occ list in the node
+  cur->node_tokenData = GTokenData(tokenData);
+  cur->occ_list_is_computed = true;
   
+  //here tokenData contains the occlist of the current patarn
+  // and extCollect contains all the possible expansions
+  /////////////////////////////////////////////////////
+
+  mappingExtTick += extCollect.mapExtTick;
+
+  if ( currentFreq != suppData.frequency )
+  {
+    cerr << "Computed Frequency not the same as supposed one" << endl;
+    cerr << "# Suppose freq : " << suppData.frequency << " VS "<<currentFreq<< endl;
+    cerr << "# Suppose occ  : " << suppData.nbOcc     << endl;
+    cerr << pPattern;
+    cerr << endl;
+    exit( EXIT_FAILURE );
   }
+  if ( nbOcc != suppData.nbOcc && pPattern->v_Tokens.at(0).angle > 0  )
+  {
+    cerr << "Computed occurency not the same as supposed one" << endl;
+    cerr << "# Suppose freq : " << suppData.frequency << endl;
+    cerr << "# Suppose occ  : " << suppData.nbOcc     << endl;
+    uint i = 0;
+    while ( i < suppData.v_OccList.size() )
+    {
+      cerr << "o "
+          << suppData.v_OccList.at(i) << " "
+          << suppData.v_OccList.at(i+1) << " "
+          << suppData.v_OccList.at(i+2) << " " << endl;
+      i+=3;
+    }
+    cerr << pPattern;
+    cerr << endl;
+    exit( EXIT_FAILURE );
+  }
+  
+  /*************************************************************************/
+  {
+    // === Fourth step : Output pattern and occurences in output file
+    // Increment pattern Id
+    uint countPat = 0;
+    bool find     = false;
+    while ( countPat < vocabPattern->v_AllPatterns.size() && !find )
+    {
+      find = vocabPattern->comp( pPattern, vocabPattern->v_AllPatterns[countPat] );
+      if ( !find )
+        countPat++;
+    }
+
+    //GPattern * tmpPat = new GPattern( *pPattern );
+    //tmpPat->pGraph = new GGraph( *pPattern->pGraph );
+
+    if ( !find )
+    {
+      //v_NbPatternByClass.at( currClassIdx )++;
+
+      if ( prevData.frequency == suppData.frequency
+          && prevData.nbOcc == suppData.nbOcc )
+      {
+        nbClosedPat++;
+        nbTotalClosedPat++;
+      }
+      pPattern->pGraph->graphID = freqPatternId;
+      freqPatternId++;
+      //vocabPattern->v_AllPatterns.push_back( tmpPat );
+    }
+    //v_PatternCurrClass.push_back(tmpPat);
+
+    if ( PARAM.DEBUG_MODE )
+    {
+      // Write pattern in output file
+      cout << "# Suppose freq : " << suppData.frequency << endl;
+      cout << "# Suppose occ  : " << suppData.nbOcc     << endl;
+      cout << "p " << freqPatternId << endl;
+      cout << pPattern->v_Tokens << endl;
+    }
+  }
+
+  /********************* store the possible expansions ********************/
+
+  
+
+  for ( map<GToken, GExtensionData, GTokenGt>::iterator it= extCollect.m_Extensions.begin();
+        it != extCollect.m_Extensions.end(); it++ )
+  {
+    if ( it->second.frequency >= minFreq )
+    {
+      // save thje possible moves on the mape
+      if ( it->first.angle != GNOANGLE )
+      {
+        cur->valid_extenstions.push_back(make_pair(it->first,it->second));
+      }
+    }
+    
+  }
+  //no need for this
+  extCollect.m_Extensions.clear();
+  
+  // we shuffle to make the chose of the action in the simulation random. Good?
+  random_shuffle ( cur->valid_extenstions.begin(), cur->valid_extenstions.end() );
+
+
+  //}
   // if it's not the first time we visite this node: restore the occ list from the node
-  else{
-    tokenData = GTokenData(cur->node_tokenData);
-  }
+  //else{
+  //  cerr<<"get the saved data\n";
+  //  tokenData = GTokenData(cur->node_tokenData);
+  //  cerr<<"valid expansions size: "<<cur->valid_extenstions.size()<<endl;
+ // }
   
 
   if(cur->valid_extenstions.size() == 0 ){
     cerr<<"No valid extensions!\n";
-    exit(1);
+    return 0;
     //wot?
   }
   
@@ -718,9 +729,11 @@ double MCTSGrima::roll_out(MCTS_node* cur,
                   suppData);
   else
     return rand(); // we should about a good return value for this
-
-
-  delete cur->children_nodes;
+  pPattern->pop_back( false );
+  de--;
+  // cur->valid_extenstions.clear();
+  // cur->children_nodes->clear();
+  // cur->node_tokenData.v_SparseOcc.clear();
   delete new_child;
 
   return ret;

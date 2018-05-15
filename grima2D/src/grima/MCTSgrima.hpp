@@ -150,9 +150,9 @@ public:
 
   MCTS_node* expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp);
 
-  double roll_out(MCTS_node* cur, 
-                    vector<GGraph*>& v_Graphs,
-                    GGlobFreq       minFreq,    //Mininmum global frequency
+  double roll_out( MCTS_node* cur, 
+                    const vector<GGraph*>& v_Graphs,
+                    const GGlobFreq       minFreq,    //Mininmum global frequency
                     GPattern*        pPattern,
                     const GToken&    lastExt, 
                     GTokenData      &tokenData,

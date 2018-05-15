@@ -63,7 +63,8 @@ GPattern::~GPattern()
 {
   // Default destructor
   delete pGraph;
-  v_OccList->clear();
+  delete v_OccList;
+  v_Tokens.clear();
 }
 // End of GPattern::~GPattern()
 

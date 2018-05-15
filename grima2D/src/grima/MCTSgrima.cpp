@@ -76,7 +76,7 @@ MCTSGrima::MCTSGrima():
   v_nbClosedPatClass.clear();
 }
 
-MCTSGrima::MCTSGrima(float _minf,GClassDB* _pClassDB):
+MCTSGrima::MCTSGrima(float _minf, GClassDB* _pClassDB):
   nbPatternAllClass(0),
   nbClosedPat(0),
   nbTotalClosedPat(0),
@@ -155,7 +155,7 @@ int MCTSGrima::processMining( )
   firstTick    = clock();
   returnStatus = search( pClassDB->v_ClassGraphs, pClassDB->m_TokenData, minFreq);
   totalTick    += clock() - firstTick;
-
+ 
   vocabPattern->v_PatternByClass.push_back( v_PatternCurrClass );
 
   //  sort( vocabPattern->v_AllPatterns.begin(), vocabPattern->v_AllPatterns.end(), GpatComptLt() );
@@ -251,15 +251,12 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
   // Instanciate iterator
   map<GToken, GTokenData, GTokenGt>::iterator it = m_TokenData.begin();
   // Instanciate current pattern object
-  GPattern currentPattern;
-  currentPattern.pGraph->graphID   = freqPatternId;
-  currentPattern.pGraph->className = "FrequentPattern";
-
+  
   cerr<<"reach the initial loop, minfreq = "<<minFreq<<", mapsize = "<<m_TokenData.size()<<" \n";
   int cocode = 0;
 
 
-  while ( it != m_TokenData.end() && cocode < 100) // carefull with the second condition!!
+  while ( it != m_TokenData.end() ) // && cocode < 100) // carefull with the second condition!!
   {
     //cerr<<"firts loop iteration "<<cocode<<' '<<it->second.freq<<" \n";
     ++cocode;
@@ -269,7 +266,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     {
       
       GExtensionData tmp;
-      
+
       tmp.nbOcc     = 0;
       tmp.frequency = it->second.freq;
       
@@ -278,7 +275,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
       
       root->valid_extenstions.push_back(make_pair(it->first,tmp));
       
-      root->node_tokenData = GTokenData(it->second) ;
+      //root->node_tokenData = GTokenData(it->second) ;
       
       // Apply recursive call
       // returnStatus = search( v_Graphs, minFreq, &currentPattern,
@@ -290,7 +287,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     // Go to next edge possible edge
     it++;
   }
-
+        
   cerr<<"reach the main loop, root map size "<<root->valid_extenstions.size()<<endl;
   int budget = 1994;
   // the main loop
@@ -306,7 +303,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     GExtensionData tmp_GExtensionData;
 
     MCTS_node* exp_node = expand(selcted_node,ext,tmp_GExtensionData);
-    
+
     selcted_node->children_nodes->insert(make_pair(ext,exp_node));
     exp_node->parent = selcted_node;
 
@@ -329,7 +326,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
                             tmp_GExtensionData,
                             first);
 
-    update_ancestors(exp_node,delta);
+    //update_ancestors(exp_node,delta);
     delete currentPattern;
   }
 
@@ -342,7 +339,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
 
 
 inline double MCTSGrima::UCB(MCTS_node* cur, MCTS_node* child){
-  return child->Q + 2*PARAM.C_p*sqrt(2*(log(cur->N_node))/child->N_node); // logaritem base??
+  return 1; //child->Q + 2*PARAM.C_p*sqrt(2*(log(cur->N_node))/child->N_node); // logaritem base??
 }
 
 MCTS_node* MCTSGrima::best_child(MCTS_node* cur,GToken& ext){
@@ -366,12 +363,13 @@ MCTS_node* MCTSGrima::select(MCTS_node* cur, GPattern* pPattern){
   
   int mx_depth = 200;
 
-  GToken ext;
+  
   while(mx_depth--){ // some stopping condition should we change this?
     
     if(!cur->is_fully_expanded)
       return cur;
-    cerr<<"go deeper\n";
+    cerr<<cur->is_fully_expanded<<" go deeper\n";
+    GToken ext;
     cur = best_child(cur,ext);
     cerr<<cur<<endl;
     pPattern->push_back(ext,false);
@@ -394,8 +392,8 @@ MCTS_node* MCTSGrima::expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp){
   MCTS_node* new_child = new MCTS_node(cur);
 
   // chose the last expansion "the vector is shuffled os it's a random choise"
-  ext = cur->valid_extenstions[cur->valid_extenstions.size()-1].first;
-  tmp = cur->valid_extenstions[cur->valid_extenstions.size()-1].second;
+  ext = GToken(cur->valid_extenstions.back().first);
+  tmp = GExtensionData(cur->valid_extenstions.back().second);
   //remove the choise from the list of available expansions
   cur->valid_extenstions.pop_back();
   
@@ -405,9 +403,9 @@ MCTS_node* MCTSGrima::expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp){
   return new_child;
 }
 
-double MCTSGrima::roll_out(MCTS_node* cur, 
-                    vector<GGraph*>& v_Graphs,
-                    GGlobFreq       minFreq,    //Mininmum global frequency
+double MCTSGrima::roll_out( MCTS_node* cur, 
+                    const vector<GGraph*>& v_Graphs,
+                    const GGlobFreq       minFreq,    //Mininmum global frequency
                     GPattern*        pPattern,
                     const GToken&    lastExt, 
                     GTokenData      &tokenData,
@@ -430,14 +428,12 @@ double MCTSGrima::roll_out(MCTS_node* cur,
 
   // Add the extension to the pattern
   pPattern->push_back( lastExt, false );
-  if(!(de%100))
-    cerr<<de<<endl;
-  de++;
+  
   // === Second step : Check if P is canonical
   firstTickTracker = clock();
   //  cout << pPattern->v_Tokens << endl;
 
-  bool isCanonical = 1;//pPattern->isCanonincal();
+  bool isCanonical = 1; //pPattern->isCanonincal();
 
   canonicalTick += clock() - firstTickTracker;
 
@@ -447,11 +443,11 @@ double MCTSGrima::roll_out(MCTS_node* cur,
   if ( !isCanonical )
   {
     // here compute the corresponding canonical code and do something with it
-    
+    //cerr<<"----------------------------------------------------\n";
     // If extension is not canonical, we should not go deeper
     //pPattern->pop_back( false );
     // Exit search. We will find this pattern later
-    //return 0;
+    return 0;
   }
   
   if(false)
@@ -524,7 +520,7 @@ double MCTSGrima::roll_out(MCTS_node* cur,
 
   /// this is the most expensive part of the code!
 
-
+  bool del = 0;
   int nbGraphSparse = tokenData.v_SparseOcc.size();
   for ( int iGraph = 0 ; iGraph < nbGraphSparse; iGraph++ )
   {
@@ -586,12 +582,16 @@ double MCTSGrima::roll_out(MCTS_node* cur,
       {
         // If edge does not wear pattern "Remove" edge from domain in the sparse set
         tokenData.v_SparseOcc.at(iGraph).remove(map) ;
+        //if(!(de%100))
+       // cerr<<"*";
+        del = 1;
       }
     }
   }
-
+  //if(del)
+  //  cerr<<"\n";
     
-  // sace the occ list in the node
+  // save the occ list in the node
   cur->node_tokenData = GTokenData(tokenData);
   cur->occ_list_is_computed = true;
   
@@ -601,17 +601,27 @@ double MCTSGrima::roll_out(MCTS_node* cur,
 
   mappingExtTick += extCollect.mapExtTick;
 
+  //cerr<<"L: "<<de<<endl; 
+  
+
   if ( currentFreq != suppData.frequency )
   {
-    cerr << "Computed Frequency not the same as supposed one" << endl;
-    cerr << "# Suppose freq : " << suppData.frequency << " VS "<<currentFreq<< endl;
-    cerr << "# Suppose occ  : " << suppData.nbOcc     << endl;
-    cerr << pPattern;
-    cerr << endl;
-    exit( EXIT_FAILURE );
+    if( abs(int(currentFreq) - int(suppData.frequency)) > 1 )
+    {
+      cerr<<"L: "<<de<<endl; 
+      cerr << "Computed Frequency not the same as supposed one" << endl;
+      cerr << "# Suppose freq : " << suppData.frequency << " VS "<<currentFreq<< endl;
+      cerr << "# Suppose occ  : " << suppData.nbOcc     << endl;
+      cerr << pPattern;
+      cerr << endl;
+    
+    }
+    return 0;
+    //exit( EXIT_FAILURE );
   }
   if ( nbOcc != suppData.nbOcc && pPattern->v_Tokens.at(0).angle > 0  )
   {
+    cerr<<"L: "<<de<<endl; 
     cerr << "Computed occurency not the same as supposed one" << endl;
     cerr << "# Suppose freq : " << suppData.frequency << endl;
     cerr << "# Suppose occ  : " << suppData.nbOcc     << endl;
@@ -626,10 +636,12 @@ double MCTSGrima::roll_out(MCTS_node* cur,
     }
     cerr << pPattern;
     cerr << endl;
-    exit( EXIT_FAILURE );
+    return 0;
+    //exit( EXIT_FAILURE );
   }
   
   /*************************************************************************/
+  if(false)
   {
     // === Fourth step : Output pattern and occurences in output file
     // Increment pattern Id
@@ -693,8 +705,10 @@ double MCTSGrima::roll_out(MCTS_node* cur,
   
   // we shuffle to make the chose of the action in the simulation random. Good?
   random_shuffle ( cur->valid_extenstions.begin(), cur->valid_extenstions.end() );
-
-
+  if(!(de%100))
+    cerr<<"L: "<<de<<" B: "<<cur->valid_extenstions.size()<<" Memory: "<<tokenData.size()<<endl;
+  //cerr.flush();
+  
   //}
   // if it's not the first time we visite this node: restore the occ list from the node
   //else{
@@ -705,13 +719,23 @@ double MCTSGrima::roll_out(MCTS_node* cur,
   
 
   if(cur->valid_extenstions.size() == 0 ){
-    cerr<<"No valid extensions!\n";
+    cerr<<"No valid expantions!\n";
+    pPattern->pop_back( false );
+    de--;
     return 0;
     //wot?
   }
+
+  if(de >= 10 && 0 ){
+    //cur->valid_extenstions.clear();
+    //cur->valid_extenstions.shrink_to_fit();
+    //pPattern->pop_back( false );
+    return 0;
+  }
   
+   ++de;
   // chose the last element
-  pair<GToken,GExtensionData> sel_move = cur->valid_extenstions[cur->valid_extenstions.size()-1];
+  pair<GToken,GExtensionData> sel_move = cur->valid_extenstions.back();
   // delete the last element
 
   MCTS_node* new_child = new MCTS_node();
@@ -728,12 +752,13 @@ double MCTSGrima::roll_out(MCTS_node* cur,
                   sel_move.second,
                   suppData);
   else
-    return rand(); // we should about a good return value for this
-  pPattern->pop_back( false );
+    return rand(); // we should put a good return value for this
+  //pPattern->pop_back( false );
   de--;
   // cur->valid_extenstions.clear();
   // cur->children_nodes->clear();
   // cur->node_tokenData.v_SparseOcc.clear();
+  
   delete new_child;
 
   return ret;

@@ -140,6 +140,14 @@ struct GTokenData {
   /// List of all occurence through a vector of sparseset, one sparset per grid
   vector<GSparseSet> v_SparseOcc;
   /// Absolute frequency of edge ( <= that the number of graph )
+  int size()
+  {
+    int ret = 0;
+    for ( int i=0;i<v_SparseOcc.size();++i)
+      ret += v_SparseOcc[i].v_Domain.size();
+    
+    return ret;
+  }
   uint               freq;
 };
 

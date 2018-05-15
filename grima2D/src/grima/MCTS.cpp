@@ -93,7 +93,18 @@ MCTS_node::~MCTS_node()
    * Copy Desc
    */
 
+  //for(int i=0;i<node_tokenData.v_SparseOcc.size();++i){
+  //  node_tokenData.v_SparseOcc[i].v_Domain.clear();
+  //  node_tokenData.v_SparseOcc[i].v_Domain.shrink_to_fit();
+  //  node_tokenData.v_SparseOcc[i].v_Map.clear();
+  //  node_tokenData.v_SparseOcc[i].v_Map.shrink_to_fit();
+  //  //delete node_tokenData.v_SparseOcc[i].pGraph;
+  //}
+
   node_tokenData.v_SparseOcc.clear();
+  node_tokenData.v_SparseOcc.shrink_to_fit();
   valid_extenstions.clear();
+  valid_extenstions.shrink_to_fit();
+
   delete children_nodes;
 }

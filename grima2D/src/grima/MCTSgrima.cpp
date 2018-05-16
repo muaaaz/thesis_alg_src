@@ -227,6 +227,37 @@ void MCTSGrima::saveData( bool timeOutOverride )
   cout  << "total_time_sec,"       << (double)totalTick / CLOCKS_PER_SEC << endl;
   cout << endl;
 }
+
+void print(GTokenData ob)
+{
+  for ( int i=0;i<ob.v_SparseOcc.size();++i)
+  {
+    cerr<<"G "<<i<<":\n";
+    GSparseSet SparseOccTmp = ob.v_SparseOcc.at(i);
+    uint domainSize = SparseOccTmp.size;
+
+    for ( uint iDom = 0; iDom < domainSize  ; iDom++ )
+    {
+      uint map                  = SparseOccTmp.atDom(iDom);
+      GSparseSet::mapEdge mEdge = SparseOccTmp.atMap(map);
+      cerr<<mEdge.nodeFrom<<' '<<mEdge.nodeDest<<endl;
+    }
+    
+  }
+}
+
+void print( map<GToken, GTokenData, GTokenGt> &m_TokenData)
+{
+
+  map<GToken, GTokenData, GTokenGt>::iterator it = m_TokenData.begin();
+  
+  while(it != m_TokenData.end())
+  {
+    cerr<<"token: "<<it->first.nodeLabelFrom<<' '<<it->first.nodeLabelDest<<'\n';//<<it->second.v_SparseOcc.size()<<" :\n";
+    print(it->second);
+    it++;
+  }
+}
 // End of Grima::saveData( string outDir, int returnStatus )
 
 //---- PROTECTED  ------------------------------------------------------------//
@@ -255,7 +286,11 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
   cerr<<"reach the initial loop, minfreq = "<<minFreq<<", mapsize = "<<m_TokenData.size()<<" \n";
   int cocode = 0;
 
-
+  if(0)
+  {
+    print(m_TokenData);
+    exit(22);
+  }
   while ( it != m_TokenData.end() ) // && cocode < 100) // carefull with the second condition!!
   {
     //cerr<<"firts loop iteration "<<cocode<<' '<<it->second.freq<<" \n";
@@ -287,7 +322,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     // Go to next edge possible edge
     it++;
   }
-        
+
   cerr<<"reach the main loop, root map size "<<root->valid_extenstions.size()<<endl;
   int budget = 1994;
   // the main loop
@@ -303,7 +338,8 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     GExtensionData tmp_GExtensionData;
 
     MCTS_node* exp_node = expand(selcted_node,ext,tmp_GExtensionData);
-
+    //cerr<<"select pat:\n";
+    //cerr<<currentPattern
     selcted_node->children_nodes->insert(make_pair(ext,exp_node));
     exp_node->parent = selcted_node;
 
@@ -339,23 +375,34 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
 
 
 inline double MCTSGrima::UCB(MCTS_node* cur, MCTS_node* child){
-  return 1; //child->Q + 2*PARAM.C_p*sqrt(2*(log(cur->N_node))/child->N_node); // logaritem base??
+  return rand()%100; //child->Q + 2*PARAM.C_p*sqrt(2*(log(cur->N_node))/child->N_node); // logaritem base??
 }
 
 MCTS_node* MCTSGrima::best_child(MCTS_node* cur,GToken& ext){
-    //this functio will return the best child of the current MCTS node
+    //this function will return the best child of the current MCTS node
     MCTS_node* ret = NULL;
     double cur_UCB = -1, mx_UCB = -1 ;
     map< GToken ,MCTS_node*, GTokenGt>::iterator it;
+    bool bad = 1;
+    //cerr<<"childrens:\n";
     for(it = cur->children_nodes->begin();it != cur->children_nodes->end() ;it++)
     {
+      //cerr<<it->first;
       cur_UCB = UCB(cur,it->second);
-      if( cur_UCB > mx_UCB){
+      if( cur_UCB > mx_UCB)
+      {
         mx_UCB = cur_UCB;
         ret = it->second;
         ext = it->first;
+        bad = 0;
       }
     }
+    if(bad)
+    {
+      cerr<<"bad!\n";
+      exit(1);
+    }
+    //cerr<<"end of children.\n";
     return ret;
 }
 
@@ -363,17 +410,26 @@ MCTS_node* MCTSGrima::select(MCTS_node* cur, GPattern* pPattern){
   
   int mx_depth = 200;
 
-  
+  int cc = 1;
   while(mx_depth--){ // some stopping condition should we change this?
     
     if(!cur->is_fully_expanded)
       return cur;
-    cerr<<cur->is_fully_expanded<<" go deeper\n";
-    GToken ext;
-    cur = best_child(cur,ext);
-    cerr<<cur<<endl;
-    pPattern->push_back(ext,false);
+    cerr<<cur<<" go deeper: "<<cc++<<"\n";
     
+    GToken ext;
+    if(!cur->children_nodes->size()){
+      cerr<<"dead end!!\n";
+      exit(1);
+    }
+  
+    //cerr<<"--------------------------------\n";
+    //cerr<<pPattern;
+    cur = best_child(cur,ext);
+    //cerr<<"node address: "<<cur<<endl;    
+    //cerr<<"edge: "<<ext;
+    pPattern->push_back(ext,false);
+    //cerr<<pPattern;
   }
 
   return cur; //should change this???
@@ -606,7 +662,7 @@ double MCTSGrima::roll_out( MCTS_node* cur,
 
   if ( currentFreq != suppData.frequency )
   {
-    if( abs(int(currentFreq) - int(suppData.frequency)) > 1 )
+    if( 1 || abs(int(currentFreq) - int(suppData.frequency)) > 1 )
     {
       cerr<<"L: "<<de<<endl; 
       cerr << "Computed Frequency not the same as supposed one" << endl;
@@ -616,8 +672,8 @@ double MCTSGrima::roll_out( MCTS_node* cur,
       cerr << endl;
     
     }
-    return 0;
-    //exit( EXIT_FAILURE );
+    //return 0;
+    exit( EXIT_FAILURE );
   }
   if ( nbOcc != suppData.nbOcc && pPattern->v_Tokens.at(0).angle > 0  )
   {
@@ -705,8 +761,17 @@ double MCTSGrima::roll_out( MCTS_node* cur,
   
   // we shuffle to make the chose of the action in the simulation random. Good?
   random_shuffle ( cur->valid_extenstions.begin(), cur->valid_extenstions.end() );
+  
+  //cerr<<lastExt;
   if(!(de%100))
     cerr<<"L: "<<de<<" B: "<<cur->valid_extenstions.size()<<" Memory: "<<tokenData.size()<<endl;
+  //cerr<<pPattern;
+  //cerr<<"possible expansions:\n";
+  //for(int i=0;i< cur->valid_extenstions.size();++i)
+  //  cerr<<cur->valid_extenstions[i].first;
+  //cerr<<"--------------------\n";
+  //print(tokenData);
+  
   //cerr.flush();
   
   //}
@@ -758,7 +823,7 @@ double MCTSGrima::roll_out( MCTS_node* cur,
   // cur->valid_extenstions.clear();
   // cur->children_nodes->clear();
   // cur->node_tokenData.v_SparseOcc.clear();
-  
+  cur->children_nodes->erase(cur->children_nodes->find(sel_move.first));
   delete new_child;
 
   return ret;

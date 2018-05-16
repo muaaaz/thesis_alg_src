@@ -67,6 +67,8 @@ MCTS_node::MCTS_node():
    */
   children_nodes    = new map<GToken, MCTS_node*,     GTokenGt>();
   valid_extenstions = vector<pair<GToken, GExtensionData> > ();
+  children_nodes->clear();
+  valid_extenstions.clear();
 }
 
 MCTS_node::MCTS_node(MCTS_node* _parent_):
@@ -82,6 +84,8 @@ MCTS_node::MCTS_node(MCTS_node* _parent_):
    */
   children_nodes    = new map<GToken, MCTS_node*,     GTokenGt>();
   valid_extenstions = vector<pair<GToken, GExtensionData> > ();
+  children_nodes->clear();
+  valid_extenstions.clear();
 }
 
 

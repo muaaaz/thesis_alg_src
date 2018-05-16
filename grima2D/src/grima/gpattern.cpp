@@ -700,4 +700,7 @@ ostream& operator<<(ostream& stream, GToken token )
          << token.nodeLabelDest << ")" << endl;
   return stream;
 }
+
+
+
 // End of ostream& operator<<(ostream& stream, GToken tokens )

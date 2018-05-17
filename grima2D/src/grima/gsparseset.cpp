@@ -43,17 +43,14 @@ using namespace std;
 // Public CONSTANTS __________________________________________________________//
 // Public Constructor/Desctructor ____________________________________________//
 GSparseSet::GSparseSet():
-  size(0),
   graphID(0)
 {
   // Default Constructor
-  v_Domain.resize(0);
-  v_Map.resize(0);
+  data.resize(0);
 }
 // End of HSparseSet::SparseSet()
 
-GSparseSet::GSparseSet(uint graphId , GGraph *p_Graph):
-  size(0)
+GSparseSet::GSparseSet(uint graphId , GGraph *p_Graph)
 {
   /**
    * @brief GSparseSet
@@ -62,21 +59,19 @@ GSparseSet::GSparseSet(uint graphId , GGraph *p_Graph):
    */
   pGraph  = p_Graph;
   graphID = graphId;
-  v_Domain.resize(0);
-  v_Map.resize(0);
+  data.resize(0);
 }
 // End of GSparseSet::GSparseSet( uint graph ):
 
 GSparseSet::~GSparseSet()
 {
   /// Default destructor
-  v_Domain.clear();
-  v_Map.clear();
+  data.clear();
 }
 // End of GSparseSet::~GSparseSet()
 
 // Accessor __________________________________________________________________//
-GSparseSet::mapEdge GSparseSet::atMap( uint i )
+GSparseSet::mapEdge GSparseSet::at( uint i )
 {
   /*
    * @brief atMat
@@ -85,34 +80,14 @@ GSparseSet::mapEdge GSparseSet::atMap( uint i )
    * @param i
    * @return
    */
-  return v_Map.at(i);
+  return data.at(i);
 }
 // End of GSparseSet::atMat( uint i )
 
-uint GSparseSet::atDom( uint i )
-{
-  /**
-   * @brief atDom
-   * TODO : RD
-   * Copy desc from header
-   * @param i
-   * @return
-   */
-  return v_Domain.at(i);
-}
 // End of GSparseSet::atDom( uint i )
 
 // Mutator ___________________________________________________________________//
-void GSparseSet::setSize( uint newSize )
-{
-  /*
-   * @brief setSize
-   * TODO : RD
-   * Copy desc from header
-   * @param newSize
-   */
-  size = newSize;
-}
+
 // End of GSparseSet::setSize( uint newSize )
 
 // Public Methods ____________________________________________________________//
@@ -123,11 +98,9 @@ void GSparseSet::add( mapEdge edge )
    * Copy desc from head
    */
   // Insert edge
-  edge.element = size;
-  v_Domain.push_back( size );
-  v_Map.push_back( edge );
+  edge.element = size();
+  data.push_back( edge );
   // update size
-  size++;
 }
 // End of GSparseSet::add( mapEdge edge )
 
@@ -142,13 +115,10 @@ void GSparseSet::add( GNodeID from, GNodeID dest, GEdgeID edge )
   e.nodeDest = dest;
   e.nodeFrom = from;
   e.edgeId   = edge;
-  e.element  = size;
-  // Insert mapEdge.
-  vector< uint >::iterator it = v_Domain.begin()+size;
-  v_Domain.insert(it,v_Map.size());
-  v_Map.push_back(e);
+  e.element  = size();
+  
+  data.push_back(e);
   // update size
-  size++;
 }
 // End of add(GNodeID from, GNodeID dest, GEdgeID edge )
 
@@ -160,10 +130,10 @@ void GSparseSet::remove( mapEdge e )
    * Copy desc
    */
   int idx = find( e );
-  if ( v_Map[idx].element <= size )
+  if ( idx != -1 )
   {
-    swap( v_Map[idx].element, size-1 );
-    size = size-1;
+    swap( idx, size()-1 );
+    data.pop_back();
   }
 }
 // End of GSparseSet::remove( mapEdge e )
@@ -174,9 +144,11 @@ void GSparseSet::remove( uint i )
    * TODO : RD
    * Copy Desc
    */
-  if ( v_Map.at(i).element <= size )
-    swap( v_Map.at(i).element, size-1 );
-  size = size-1;
+  if(i < size())
+  {
+    swap( i, size()-1 );
+    data.pop_back();
+  }
 }
 // End of GSparseSet::remove( int i )
 
@@ -193,11 +165,11 @@ int GSparseSet::find( mapEdge e )
    * TODO : RD
    * Copy Desc
    */
-  if ( v_Map.size() == 0 )
+  if ( size() == 0 )
     return -1;
   else
-    for ( uint i=0 ; i < v_Map.size(); ++i )
-      if ( v_Map[i].nodeDest == e.nodeDest && v_Map[i].nodeFrom == e.nodeFrom )
+    for ( uint i=0 ; i < size(); ++i )
+      if ( data[i].nodeDest == e.nodeDest && data[i].nodeFrom == e.nodeFrom )
         return i;
   // If not find, return -1
   return -1;
@@ -210,11 +182,10 @@ void GSparseSet::swap( uint i, uint j )
    * TODO : RD
    * Copy Desc
    */
-  uint tmp = v_Domain[i];
-  v_Domain[i] = v_Domain[j];
-  v_Domain[j] =  tmp;
-  v_Map[v_Domain[i]].element = i;
-  v_Map[v_Domain[j]].element = j;
+  mapEdge tmp = mapEdge(data[i]);
+  data[i] = mapEdge(data[j]);
+  data[j] =  mapEdge(tmp);
+
 }
 // End of GSparseSet::swap( uint i, uint j )
 

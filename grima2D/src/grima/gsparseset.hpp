@@ -63,14 +63,20 @@ public:
     GNodeID nodeDest;
     GEdgeID edgeId;
     uint    element;
+    bool operator == (const mapEdge ob) const {
+      return nodeFrom == ob.nodeFrom &&
+             nodeDest == ob.nodeDest &&
+             edgeId   == ob.edgeId &&
+             element  == ob.element ;
+             
+    }
   };
 
   /// Domain that store element
-  vector<uint>    v_Domain;
+  //vector<uint>    v_Domain;
   /// Map that store value of the element
-  vector<mapEdge> v_Map;
+  vector<mapEdge> data;
   /// Size of unremoved domain
-  uint size;
   /// Ggraph ID
   uint graphID;
   /// Graph Memory ID
@@ -90,26 +96,17 @@ public:
   /// Default destructor
   ~GSparseSet();
 
-
+  int size()
+  {
+    return data.size();
+  }
   // Accessor ________________________________________________________________//
   /**
    * TODO : RD
    * Write desc
    */
-  mapEdge atMap( uint i );
+  mapEdge at( uint i );
 
-  /**
-   * TODO : RD
-   * Write desc
-   */
-  uint atDom( uint i );
-
-  // Mutator _______________________________________________________________//
-  /**
-   * TODO : RD
-   * Write desc
-   */
-  void setSize( uint newSize );
 
   // Public Methods _________________________________________________________//
   /**

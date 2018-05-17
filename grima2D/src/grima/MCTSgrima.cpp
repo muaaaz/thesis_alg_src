@@ -232,14 +232,16 @@ void print(GTokenData ob)
 {
   for ( int i=0;i<ob.v_SparseOcc.size();++i)
   {
+    
+    if(!ob.v_SparseOcc.at(i).size())
+      continue;
     cerr<<"G "<<i<<":\n";
     GSparseSet SparseOccTmp = ob.v_SparseOcc.at(i);
-    uint domainSize = SparseOccTmp.size;
+    uint domainSize = SparseOccTmp.size();
 
     for ( uint iDom = 0; iDom < domainSize  ; iDom++ )
     {
-      uint map                  = SparseOccTmp.atDom(iDom);
-      GSparseSet::mapEdge mEdge = SparseOccTmp.atMap(map);
+      GSparseSet::mapEdge mEdge = SparseOccTmp.at(iDom);
       cerr<<mEdge.nodeFrom<<' '<<mEdge.nodeDest<<endl;
     }
     
@@ -282,7 +284,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
   // Instanciate iterator
   map<GToken, GTokenData, GTokenGt>::iterator it = m_TokenData.begin();
   // Instanciate current pattern object
-  
+
   cerr<<"reach the initial loop, minfreq = "<<minFreq<<", mapsize = "<<m_TokenData.size()<<" \n";
   int cocode = 0;
 
@@ -306,8 +308,19 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
       tmp.frequency = it->second.freq;
       
       for ( uint iGraph = 0 ; iGraph < it->second.v_SparseOcc.size() ; iGraph++ )
-        tmp.nbOcc += it->second.v_SparseOcc.at(iGraph).size;
+        tmp.nbOcc += it->second.v_SparseOcc.at(iGraph).size();
       
+      // for(int i = 0 ;i < it->second.v_SparseOcc.size();++i){
+      //   for(int j=0;j<it->second.v_SparseOcc.at(i).size();++j){
+      //     for(int jj=j+1;jj<it->second.v_SparseOcc.at(i).size();++jj){
+      //       if (it->second.v_SparseOcc.at(i).at(j) == it->second.v_SparseOcc.at(i).at(jj) ){
+      //         cerr<<"Repition in the edges!\n";
+      //         exit(1);
+      //       }
+      //     }
+      //   }
+      // }
+        
       root->valid_extenstions.push_back(make_pair(it->first,tmp));
       
       //root->node_tokenData = GTokenData(it->second) ;
@@ -489,7 +502,7 @@ double MCTSGrima::roll_out( MCTS_node* cur,
   firstTickTracker = clock();
   //  cout << pPattern->v_Tokens << endl;
 
-  bool isCanonical = 1; //pPattern->isCanonincal();
+  bool isCanonical = 1;//pPattern->isCanonincal();
 
   canonicalTick += clock() - firstTickTracker;
 
@@ -573,7 +586,7 @@ double MCTSGrima::roll_out( MCTS_node* cur,
   subGraphIso.clearOccList();
   /* Number of sparse set (i.e. number of graphs in which first edge of pattern
   * is frequent */
-
+  int my_last = -1;
   /// this is the most expensive part of the code!
 
   bool del = 0;
@@ -584,13 +597,9 @@ double MCTSGrima::roll_out( MCTS_node* cur,
     // As the sparse set is modified, just create copy for the FOR LOOP
     GSparseSet SparseOccTmp = tokenData.v_SparseOcc.at(iGraph);
     // Get domain size
-    uint domainSize = SparseOccTmp.size;
-    for ( uint iDom = 0; iDom < domainSize  ; iDom++ )
+    for ( uint idx = 0; idx < SparseOccTmp.size() ; idx++ )
     {
-      // For each edge in the domain of the sparse set
-      // Get map value of edge wearing pattern
-      uint map                  = SparseOccTmp.atDom(iDom);
-      GSparseSet::mapEdge mEdge = SparseOccTmp.atMap(map);
+      GSparseSet::mapEdge mEdge = SparseOccTmp.at(idx);
       // Find if this edge wear an occurence of the pattern
       firstTickTracker = clock();
       bool findOcc = subGraphIso.run( SparseOccTmp.pGraph,
@@ -600,6 +609,7 @@ double MCTSGrima::roll_out( MCTS_node* cur,
 
       if ( findOcc )
       {
+        
         // If edge wears pattern
         // Increment occurences counter
         nbOcc++;
@@ -629,15 +639,18 @@ double MCTSGrima::roll_out( MCTS_node* cur,
           lastOccGraphID    = SparseOccTmp.graphID;
           lastOccGraphMemId = SparseOccTmp.pGraph;
         }
+        else if(iGraph != my_last)
+          currentFreq++;
         // Compute all extension of this occurence
         firstTickTracker = clock();
         extCollect.process( subGraphIso );
         extensionTick += clock() - firstTickTracker;
+        my_last = iGraph;
       }
       else
       {
         // If edge does not wear pattern "Remove" edge from domain in the sparse set
-        tokenData.v_SparseOcc.at(iGraph).remove(map) ;
+        tokenData.v_SparseOcc.at(iGraph).remove(mEdge) ;
         //if(!(de%100))
        // cerr<<"*";
         del = 1;
@@ -662,18 +675,15 @@ double MCTSGrima::roll_out( MCTS_node* cur,
 
   if ( currentFreq != suppData.frequency )
   {
-    if( 1 || abs(int(currentFreq) - int(suppData.frequency)) > 1 )
-    {
-      cerr<<"L: "<<de<<endl; 
-      cerr << "Computed Frequency not the same as supposed one" << endl;
-      cerr << "# Suppose freq : " << suppData.frequency << " VS "<<currentFreq<< endl;
-      cerr << "# Suppose occ  : " << suppData.nbOcc     << endl;
-      cerr << pPattern;
-      cerr << endl;
-    
-    }
-    //return 0;
-    exit( EXIT_FAILURE );
+   
+    cerr<<"L: "<<de<<endl; 
+    cerr << "Computed Frequency not the same as supposed one" << endl;
+    cerr << "# Suppose freq : " << suppData.frequency << " VS "<<currentFreq <<" VS "<<tokenData.size()<< endl;
+    cerr << "# Suppose occ  : " << suppData.nbOcc     << endl;
+    cerr << pPattern;
+    cerr << endl;
+    print(tokenData);
+    exit( EXIT_FAILURE ); 
   }
   if ( nbOcc != suppData.nbOcc && pPattern->v_Tokens.at(0).angle > 0  )
   {
@@ -763,15 +773,20 @@ double MCTSGrima::roll_out( MCTS_node* cur,
   random_shuffle ( cur->valid_extenstions.begin(), cur->valid_extenstions.end() );
   
   //cerr<<lastExt;
-  if(!(de%100))
-    cerr<<"L: "<<de<<" B: "<<cur->valid_extenstions.size()<<" Memory: "<<tokenData.size()<<endl;
-  //cerr<<pPattern;
-  //cerr<<"possible expansions:\n";
-  //for(int i=0;i< cur->valid_extenstions.size();++i)
-  //  cerr<<cur->valid_extenstions[i].first;
-  //cerr<<"--------------------\n";
-  //print(tokenData);
-  
+  if(!(de%100) || de<10)
+    cerr<<"L: "<<de<<" B: "<<cur->valid_extenstions.size()
+    <<" Memory: "<<tokenData.size()<<" Frequancy: "<<currentFreq
+    <<" Occ: "<<nbOcc<<endl;
+  cerr.flush();
+  if(0)
+  {
+    cerr<<pPattern;
+    cerr<<"possible expansions:\n";
+    for(int i=0;i< cur->valid_extenstions.size();++i)
+      cerr<<cur->valid_extenstions[i].first;
+    cerr<<"--------------------\n";
+    print(tokenData);
+  }
   //cerr.flush();
   
   //}

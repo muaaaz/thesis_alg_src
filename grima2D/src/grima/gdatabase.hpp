@@ -144,7 +144,7 @@ struct GTokenData {
   {
     int ret = 0;
     for ( int i=0;i<v_SparseOcc.size();++i)
-      ret += v_SparseOcc[i].v_Domain.size();
+      ret += v_SparseOcc[i].data.size();
     
     return ret;
   }

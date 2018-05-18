@@ -35,6 +35,7 @@
 #include "../global.hpp"
 #include "gdatabase.hpp"
 
+extern int incremental_counter;
 //=============================== NAMESPACE ==================================//
 //================================ METHODS ===================================//
 //================================= CLASS ====================================//
@@ -122,7 +123,7 @@ void GDatabase::read( string filename )
 
     // Read one graph in file to store it
     graph->read( data, v_Tokens, suppGraphID, tmpGClassDB->className  );
-   
+    graph->graphID = incremental_counter++ ;
 
     if (graph->className != tmpGClassDB->className )
     {

@@ -139,14 +139,14 @@ bool GSubgraphIso::run( GGraph* pNewLargeGraph,
     if ( v_PatternIdx.size() != largeGraph->v_Nodes.size())
       v_PatternIdx.resize( largeGraph->v_Nodes.size(), GNONODEID );
   }
-
+  
   // Set the id of the largeGraph in the v_LargeGraphIdx
   v_LargeGraphIdx->at(offset-1) = largeGraph->graphID;
-
+  
   // Get the corresponding edge in largeGraph
   GGraphEdge &edge =
       largeGraph->v_Nodes.at(nodeLargeIdFrom).v_Edges.at(edgeLargeId);
-
+  
   // Map node of P into largeGraph
   // Token.nodeFrom in P maps nodeLargeId in the graph largeGraph
   v_PatternIdx[nodeLargeIdFrom] = token.nodeFrom;

@@ -235,7 +235,7 @@ void print(GTokenData ob)
     
     if(!ob.v_SparseOcc.at(i).size())
       continue;
-    cerr<<"G "<<i<<":\n";
+    cerr<<"G "<<ob.v_SparseOcc.at(i).graphID<<" C "<<ob.v_SparseOcc.at(i).pGraph->classID<<":\n";
     GSparseSet SparseOccTmp = ob.v_SparseOcc.at(i);
     uint domainSize = SparseOccTmp.size();
 
@@ -337,11 +337,11 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
   }
 
   cerr<<"reach the main loop, root map size "<<root->valid_extenstions.size()<<endl;
-  int budget = 1994;
+  int budget = 19941994;
   // the main loop
   while(budget--)
   {
-   
+    de = 0;
     GPattern* currentPattern = new GPattern();
     currentPattern->pGraph->graphID   = freqPatternId;
     currentPattern->pGraph->className = "FrequentPattern";
@@ -364,8 +364,8 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     else
       tmp_GTokenData = selcted_node->node_tokenData;
 
-    cerr<<"tmp_GTokenData size: "<<tmp_GTokenData.v_SparseOcc.size()<<"\n";
-    de = 0;
+   // cerr<<"tmp_GTokenData size: "<<tmp_GTokenData.v_SparseOcc.size()<<"\n";
+    
     double delta = roll_out(exp_node,
                             v_Graphs,
                             minF,
@@ -374,7 +374,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
                             tmp_GTokenData,
                             tmp_GExtensionData,
                             first);
-
+   // cerr<<"end of rollout\n";
     //update_ancestors(exp_node,delta);
     delete currentPattern;
   }
@@ -428,6 +428,7 @@ MCTS_node* MCTSGrima::select(MCTS_node* cur, GPattern* pPattern){
     
     if(!cur->is_fully_expanded)
       return cur;
+    de++;
     cerr<<cur<<" go deeper: "<<cc++<<"\n";
     
     GToken ext;
@@ -502,7 +503,7 @@ double MCTSGrima::roll_out( MCTS_node* cur,
   firstTickTracker = clock();
   //  cout << pPattern->v_Tokens << endl;
 
-  bool isCanonical = 1;//pPattern->isCanonincal();
+  bool isCanonical = 1;pPattern->isCanonincal();
 
   canonicalTick += clock() - firstTickTracker;
 
@@ -573,7 +574,8 @@ double MCTSGrima::roll_out( MCTS_node* cur,
     //tokenData is the occlist of the parent pattern
     //calculate the possible valid extention and but them in a map
   }
- 
+
+
   // if this is the first time we go into this node "of it's not in the first level of the rool out"
   //if(!cur->occ_list_is_computed)
   //{
@@ -588,14 +590,16 @@ double MCTSGrima::roll_out( MCTS_node* cur,
   * is frequent */
   int my_last = -1;
   /// this is the most expensive part of the code!
-
+  //cerr<<"-------\n";
   bool del = 0;
   int nbGraphSparse = tokenData.v_SparseOcc.size();
   for ( int iGraph = 0 ; iGraph < nbGraphSparse; iGraph++ )
   {
     // For each sparseset
     // As the sparse set is modified, just create copy for the FOR LOOP
+    
     GSparseSet SparseOccTmp = tokenData.v_SparseOcc.at(iGraph);
+    
     // Get domain size
     for ( uint idx = 0; idx < SparseOccTmp.size() ; idx++ )
     {
@@ -656,10 +660,10 @@ double MCTSGrima::roll_out( MCTS_node* cur,
         del = 1;
       }
     }
+
   }
   //if(del)
   //  cerr<<"\n";
-    
   // save the occ list in the node
   cur->node_tokenData = GTokenData(tokenData);
   cur->occ_list_is_computed = true;
@@ -766,18 +770,21 @@ double MCTSGrima::roll_out( MCTS_node* cur,
     }
     
   }
+
   //no need for this
   extCollect.m_Extensions.clear();
-  
+
   // we shuffle to make the chose of the action in the simulation random. Good?
   random_shuffle ( cur->valid_extenstions.begin(), cur->valid_extenstions.end() );
   
   //cerr<<lastExt;
-  if(!(de%100) || de<10)
+  if(!(de%100) || de<20)
+  //if( de>4 && currentFreq > 5)
     cerr<<"L: "<<de<<" B: "<<cur->valid_extenstions.size()
     <<" Memory: "<<tokenData.size()<<" Frequancy: "<<currentFreq
     <<" Occ: "<<nbOcc<<endl;
   cerr.flush();
+
   if(0)
   {
     cerr<<pPattern;
@@ -798,7 +805,8 @@ double MCTSGrima::roll_out( MCTS_node* cur,
  // }
   
 
-  if(cur->valid_extenstions.size() == 0 ){
+  if(cur->valid_extenstions.size() == 0 )
+  {
     cerr<<"No valid expantions!\n";
     pPattern->pop_back( false );
     de--;
@@ -806,21 +814,23 @@ double MCTSGrima::roll_out( MCTS_node* cur,
     //wot?
   }
 
-  if(de >= 10 && 0 ){
+  if(de >= 10 && 0 )
+  {
     //cur->valid_extenstions.clear();
     //cur->valid_extenstions.shrink_to_fit();
     //pPattern->pop_back( false );
     return 0;
   }
   
-   ++de;
+  ++de;
+
   // chose the last element
   pair<GToken,GExtensionData> sel_move = cur->valid_extenstions.back();
   // delete the last element
 
   MCTS_node* new_child = new MCTS_node();
   cur->children_nodes->operator[](sel_move.first) = new_child;
-  
+
   double ret;
   if(true) // a stopping condition needed OR we continue until the pattern is not frequent? Wot?
     ret = roll_out(new_child,
@@ -838,13 +848,15 @@ double MCTSGrima::roll_out( MCTS_node* cur,
   // cur->valid_extenstions.clear();
   // cur->children_nodes->clear();
   // cur->node_tokenData.v_SparseOcc.clear();
-  cur->children_nodes->erase(cur->children_nodes->find(sel_move.first));
-  delete new_child;
 
+  cur->children_nodes->erase(cur->children_nodes->find(sel_move.first));
+
+  delete new_child;
   return ret;
 }
 
-void MCTSGrima::update_ancestors(MCTS_node* cur, double delta){ //wot??
+void MCTSGrima::update_ancestors(MCTS_node* cur, double delta)
+{ 
   while(cur!=NULL){
     cur->Q = (cur->N_node*cur->Q+delta)/(cur->N_node+1);
     cur->N_node = cur->N_node+1;

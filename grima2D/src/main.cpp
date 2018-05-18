@@ -282,6 +282,8 @@ param PARAM = param();
 
 // ./grima2D -o /udd/mtwaty/Downloads/thesis_alg_src/grima2D/output -T 1 -f 0.5 in.gri
 
+int incremental_counter = 0;
+
 int main( int argc, char **argv )
 {
   cout << "#==== START OF GRIMA !" << endl;
@@ -300,7 +302,7 @@ int main( int argc, char **argv )
   //{
   grima.minF      = PARAM.MINFREQ;
   grima.pClassDB  = graphDB.v_GClassDB.at(0);
-
+  
   returnStatus = grima.processMining();
   grima.v_ReturnStatus.push_back(returnStatus);
   if ( returnStatus == -1 ) // I.E. TIMEOUT

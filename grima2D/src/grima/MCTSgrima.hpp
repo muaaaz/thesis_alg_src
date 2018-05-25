@@ -44,7 +44,7 @@
 
 #include "MCTS.hpp"
 
-
+#include <unordered_map>
 
 //=============================== NAMESPACE ==================================//
 //============================ STRUCT & TYPEDEF ==============================//
@@ -98,6 +98,10 @@ public:
 
   float minF;
   GClassDB* pClassDB;
+
+  unordered_map< string , int > nodes_pointers;
+
+
   // Public Structure & Typedef ______________________________________________//
   // Public Constructor/Desctructor __________________________________________//
   /**

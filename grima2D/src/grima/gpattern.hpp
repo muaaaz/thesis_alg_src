@@ -113,6 +113,8 @@ public:
    */
   bool isCanonincal();
 
+  GPattern* getCanonincal();
+
 
   void printOcc();
 

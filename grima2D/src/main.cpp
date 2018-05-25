@@ -33,6 +33,17 @@
 #include "grima/grima.hpp"
 #include "grima/MCTSgrima.hpp"
 
+
+// for testing mod
+// #define TESTCAN
+
+#ifdef TESTCAN
+
+#include "grima/gpattern.hpp"
+#include "grima/gcanonicaldfscomputer.hpp"
+#include "grima/gglobal.hpp"
+
+#endif
 //#include "grima/greader.hpp"
 //#include "grima/gglobal.hpp"
 
@@ -286,6 +297,20 @@ int incremental_counter = 0;
 
 int main( int argc, char **argv )
 {
+
+  // //test mod
+
+  // GPattern pat1 = new GPattern();
+  // GPattern pat2 = new GPattern();
+  // GToken tmp;
+
+  // tmp
+
+
+
+
+  // // end of test mod
+  // return 0;
   cout << "#==== START OF GRIMA !" << endl;
 
   int returnStatus = 0;

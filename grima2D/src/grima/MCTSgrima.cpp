@@ -359,10 +359,11 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     GExtensionData first;
     GTokenData tmp_GTokenData;
 
+    // copy the GTokenData cuz we pass it as referance
     if(selcted_node == root)
-      tmp_GTokenData = m_TokenData[ext];
+      tmp_GTokenData = GTokenData (m_TokenData[ext]);
     else
-      tmp_GTokenData = selcted_node->node_tokenData;
+      tmp_GTokenData = GTokenData (selcted_node->node_tokenData);
 
    // cerr<<"tmp_GTokenData size: "<<tmp_GTokenData.v_SparseOcc.size()<<"\n";
     
@@ -455,7 +456,8 @@ MCTS_node* MCTSGrima::expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp){
   
   if(cur->valid_extenstions.size() == 0){
     //this part sould nerver be excuted
-    cerr<<"Expanding a fully expanded node! WOT?\n";
+    cerr<<"Dead node!!\n";\
+    // we should do something here!!!
     exit(1);
   }
 
@@ -483,6 +485,8 @@ double MCTSGrima::roll_out( MCTS_node* cur,
                     GExtensionData  &prevData )
 {
  
+  if(de > 4 )
+    return 0;
   /*************************************************************************/
   // === First step : Add extension
   // Nb of occurence of Pattern ( To check if P is close)
@@ -503,8 +507,43 @@ double MCTSGrima::roll_out( MCTS_node* cur,
   firstTickTracker = clock();
   //  cout << pPattern->v_Tokens << endl;
 
-  bool isCanonical = 1;pPattern->isCanonincal();
+  bool isCanonical;
+  GPattern* tmppat;
+  isCanonical = 1; //pPattern->isCanonincal();
 
+  //cerr<<"-----------------------------\n";
+  //cerr<<pPattern;
+  //cerr.flush();
+  if(1 ){
+    
+    bool fpr = pPattern->isCanonincal();
+    tmppat = pPattern->getCanonincal();
+    bool spr = tmppat->isCanonincal();
+    //cerr.flush();
+    if(fpr && (!spr)){
+      cerr<<"If pat is cononical, it's bad\n";
+      exit(0);
+    }
+    else if(!fpr && !spr){
+      cerr<<"Bad\n";
+      cerr<<pPattern;
+      cerr.flush();
+      cerr<<"generated pat:\n";
+      cerr<<tmppat;
+      exit(0);
+    }
+    else{
+      //cerr<<"gooooooooooooooooooooooooooooood\n";
+      //cerr<<pPattern;
+      //cerr.flush();
+      //cerr<<"generated pat:\n";
+      //cerr<<tmppat;
+    }
+    
+    //exit(0);
+  }
+  //cerr<<"-----------------------------\n";
+  //cerr.flush();
   canonicalTick += clock() - firstTickTracker;
 
   
@@ -574,7 +613,7 @@ double MCTSGrima::roll_out( MCTS_node* cur,
     //tokenData is the occlist of the parent pattern
     //calculate the possible valid extention and but them in a map
   }
-
+  
 
   // if this is the first time we go into this node "of it's not in the first level of the rool out"
   //if(!cur->occ_list_is_computed)
@@ -591,10 +630,12 @@ double MCTSGrima::roll_out( MCTS_node* cur,
   int my_last = -1;
   /// this is the most expensive part of the code!
   //cerr<<"-------\n";
+
   bool del = 0;
   int nbGraphSparse = tokenData.v_SparseOcc.size();
   for ( int iGraph = 0 ; iGraph < nbGraphSparse; iGraph++ )
   {
+     
     // For each sparseset
     // As the sparse set is modified, just create copy for the FOR LOOP
     
@@ -603,9 +644,12 @@ double MCTSGrima::roll_out( MCTS_node* cur,
     // Get domain size
     for ( uint idx = 0; idx < SparseOccTmp.size() ; idx++ )
     {
+      
       GSparseSet::mapEdge mEdge = SparseOccTmp.at(idx);
       // Find if this edge wear an occurence of the pattern
       firstTickTracker = clock();
+
+      
       bool findOcc = subGraphIso.run( SparseOccTmp.pGraph,
                                       mEdge.nodeFrom,
                                       mEdge.edgeId   );
@@ -662,6 +706,7 @@ double MCTSGrima::roll_out( MCTS_node* cur,
     }
 
   }
+ 
   //if(del)
   //  cerr<<"\n";
   // save the occ list in the node
@@ -706,8 +751,8 @@ double MCTSGrima::roll_out( MCTS_node* cur,
     }
     cerr << pPattern;
     cerr << endl;
-    return 0;
-    //exit( EXIT_FAILURE );
+    //return 0;
+    exit( EXIT_FAILURE );
   }
   
   /*************************************************************************/
@@ -778,8 +823,7 @@ double MCTSGrima::roll_out( MCTS_node* cur,
   random_shuffle ( cur->valid_extenstions.begin(), cur->valid_extenstions.end() );
   
   //cerr<<lastExt;
-  if(!(de%100) || de<20)
-  //if( de>4 && currentFreq > 5)
+  if(!(de%100) || de < 10)
     cerr<<"L: "<<de<<" B: "<<cur->valid_extenstions.size()
     <<" Memory: "<<tokenData.size()<<" Frequancy: "<<currentFreq
     <<" Occ: "<<nbOcc<<endl;

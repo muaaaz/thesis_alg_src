@@ -155,7 +155,7 @@ public:
    * @return TRUE if pattern is canonical, FALSE else.
    */
   bool isCanonincal();
-
+  GPattern* getCanonincal();
 
   //---- PROTECTED  ----------------------------------------------------------//
 protected:
@@ -172,6 +172,8 @@ private:
   GPattern *pPattern;
   /// A version of the new pattern
   GPattern *pTestNewPat;
+  
+  GPattern *largestNewPat;
   /// A vector of DFSToken with all possible extenstion for the pattern
   vector<GCanonicalToken> v_StackCode;
   /// A vector of DFSToken buffer, used to keep equivalent backward edge added
@@ -184,6 +186,7 @@ private:
    * - The old pattern nodes (v_GraphIndex)
    */
   vector<GNodeID> v_CodeIndex;
+  vector<GNodeID> v_NewCodeIndex;
   vector<GNodeID> v_GraphIndex;
   /// Counter of nodes in the new pattern
   int nbNodes;
@@ -192,6 +195,11 @@ private:
   /// Boolean to know if we stop the test because the pattern is not canonical
   bool stop;
 
+  bool largerPatternFound;
+
+  bool cocoboolean ;
+
+  int debug_c;
   // Private Methods _________________________________________________________//
   /**
    * @brief recurse
@@ -209,6 +217,8 @@ private:
   void recurse( GEdgeAngle prevAngle, GNodeID nodeLargeI,
                 GNodeID nodeLargeJ );
 
+  void get_recurse( GEdgeAngle prevAngle, GNodeID nodeLargeI,
+                    GNodeID nodeLargeJ );
   /**
    * @brief subRecurse
    * Methods that will add the greatest extension previously construct from
@@ -223,6 +233,8 @@ private:
    */
   void subRecurse();
 
+
+  void get_subRecurse();
 
 
   GEdgeAngle getTokenAngleValue(uint    prevEdgeFrom,

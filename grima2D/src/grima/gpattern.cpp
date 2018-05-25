@@ -577,6 +577,18 @@ bool GPattern::isCanonincal()
 }
 // End of GPattern::isCanonincal()
 
+GPattern* GPattern::getCanonincal()
+{
+  /*
+   * @brief isCanonincal
+   * Test if pattern code is canonical
+   * @return TRUE if Pattern is canonical, FALSE if it's not.
+   */
+  GCanonicalDFSComputer computer( this );
+  return computer.getCanonincal();
+}
+// End of GPattern::isCanonincal()
+
 void GPattern::printOcc()
 {
   uint i     = 0;

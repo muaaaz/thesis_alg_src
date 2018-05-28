@@ -57,6 +57,22 @@ GPattern::GPattern():
   // Set default size of OccList to 100 in order to avoid null pointer
   //v_OccList->resize( 100, GNONODEID );
 }
+
+GPattern::GPattern(GPattern* pat):
+  minTCoord(0),
+  maxTCoord(0),
+  nodeMinTCoord(-1),
+  nodeMaxTCoord(-1)
+{
+  v_Tokens = vector<GToken>(pat->v_Tokens);
+  pGraph    = new GGraph(pat->pGraph);
+  v_OccList = new vector<GNodeID>(*pat->v_OccList);
+  minTCoord = pat->minTCoord;
+  maxTCoord = pat->maxTCoord;
+  nodeMinTCoord = pat->nodeMinTCoord;
+  nodeMaxTCoord = pat->nodeMaxTCoord;
+  
+}
 // End of GPattern::GPattern()
 
 GPattern::~GPattern()
@@ -65,6 +81,7 @@ GPattern::~GPattern()
   delete pGraph;
   delete v_OccList;
   v_Tokens.clear();
+  v_Tokens.shrink_to_fit();
 }
 // End of GPattern::~GPattern()
 

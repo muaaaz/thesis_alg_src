@@ -53,7 +53,7 @@ GCanonicalDFSComputer::GCanonicalDFSComputer( GPattern *pPat ):
   //copy important cuz we are going to edit the copy pf the pattern! 
   //  ##  need to check for a better solution  ##
   debug_c = 0;
-  pPattern = new GPattern ( *pPat );
+  pPattern = new GPattern ( pPat );
   cocoboolean = 1;
   pTestNewPat = new GPattern();
 }
@@ -67,8 +67,7 @@ GCanonicalDFSComputer::~GCanonicalDFSComputer()
   //or return just the hash??
   
   //this is just a copy of hte original pattern
-  //if(pPattern != pTestNewPat)
-  //  delete pPattern;
+  delete pPattern;
   // we deleted pTestNewPat in the code down, no need to clear it here
 }
 // End of GCanonicalDFSComputer::~GCanonicalDFSComputer()
@@ -106,7 +105,7 @@ bool GCanonicalDFSComputer::isCanonincal()
        && pPattern->v_Tokens.at(0).angle == -2
        && pPattern->v_Tokens.at(0).nodeLabelFrom <= pPattern->v_Tokens.at(0).nodeLabelDest )
     {
-      cerr<<"ret false 1\n";
+      //cerr<<"ret false 1\n";
       return false;
     }
   else if ( pPattern->v_Tokens.size() == 1 )
@@ -132,7 +131,7 @@ bool GCanonicalDFSComputer::isCanonincal()
       /* If there is a edge greater than the first one
          * i.e nodeLabel of this edge are greater than the first
          */
-      cerr<<"ret false 2\n";
+      //cerr<<"ret false 2\n";
       return false;
     }
     else
@@ -146,7 +145,7 @@ bool GCanonicalDFSComputer::isCanonincal()
         /* If there is a edge greater than the first one
          * i.e nodeLabel of this edge are greater than the first
          */
-        cerr<<"ret false 3\n";
+        //cerr<<"ret false 3\n";
         return false;
       }
       else if ( ( ( tmpEdge.nodeI == firstEdge.nodeI
@@ -253,7 +252,7 @@ bool GCanonicalDFSComputer::isCanonincal()
     pTestNewPat->pop_back( false );
     if ( stop )
     {
-      cerr<<"ret false 4\n";
+      //cerr<<"ret false 4\n";
       return false;
     }
   }
@@ -512,8 +511,8 @@ void GCanonicalDFSComputer::subRecurse( )
   {
     // If pPattern DFS code < current DFS tested code.
     // i.e. pPattern DFS code not canonical.
-    cerr<<"stop here:\n";
-    cerr<<pPattern->v_Tokens[position]<<" "<<token.codeToken;
+    //cerr<<"stop here:\n";
+    //cerr<<pPattern->v_Tokens[position]<<" "<<token.codeToken;
     stop = true;
     goto cleanup;
   }
@@ -613,19 +612,11 @@ GPattern* GCanonicalDFSComputer::getCanonincal()
     tmpToken.nodeDest = temp_lable;
 
     pTestNewPat->push_back( tmpToken, cocoboolean  );
-   // delete pPattern;
-    //pPattern = pTestNewPat;
-    
-    //return pPattern;
     return pTestNewPat;
   }
   else if ( pPattern->v_Tokens.size() == 1 )
   {
     pTestNewPat->push_back( tmpToken, cocoboolean  );
-    // delete pPattern;
-    //pPattern = pTestNewPat;
-    
-    //return pPattern;
     return pTestNewPat;
   }
 
@@ -639,9 +630,14 @@ GPattern* GCanonicalDFSComputer::getCanonincal()
     // For each code line
     tmpEdge.nodeI = pPattern->v_Tokens[i].nodeLabelFrom;
     tmpEdge.nodeJ = pPattern->v_Tokens[i].nodeLabelDest;
+    int mx_tmp = max(tmpEdge.nodeI,tmpEdge.nodeJ);
+    int mn_tmp = min(tmpEdge.nodeI,tmpEdge.nodeJ);
+    int mx_sml = max(smallestEdge.nodeI,smallestEdge.nodeJ);
+    int mn_sml = min(smallestEdge.nodeI,smallestEdge.nodeJ);
     
     //cerr<<"cur edge:\n";
-    //cerr<<tmpEdge.nodeI<<' '<<tmpEdge.nodeJ<<endl;
+    //cerr<<"labels: "<<tmpEdge.nodeI<<' '<<tmpEdge.nodeJ<<endl;
+    //cerr<<"ids: "<<pPattern->v_Tokens[i].nodeFrom<<' '<<pPattern->v_Tokens[i].nodeDest<<endl;
     if ( pPattern->v_Tokens.at(0).angle < 0
          && i != smallest_edge_idx
          &&  ( ( tmpEdge.nodeI > smallestEdge.nodeI || tmpEdge.nodeJ > smallestEdge.nodeI )
@@ -664,9 +660,8 @@ GPattern* GCanonicalDFSComputer::getCanonincal()
     {
       if ( ( pPattern->v_Tokens.at(0).angle >= 0 &&  pPattern->v_Tokens.at(i).angle >= 0 )
            && i != smallest_edge_idx
-           && ( max(tmpEdge.nodeI,tmpEdge.nodeJ) >  max(smallestEdge.nodeI,smallestEdge.nodeJ) 
-                || max(tmpEdge.nodeI,tmpEdge.nodeJ) == max(smallestEdge.nodeI,smallestEdge.nodeJ) && min(tmpEdge.nodeI,tmpEdge.nodeJ) >  min(smallestEdge.nodeI,smallestEdge.nodeJ)
-              ) )
+           && ( mx_tmp > mx_sml || ( mx_tmp == mx_sml && mn_tmp > mn_sml ) )
+         )
       {
 
         // (
@@ -708,13 +703,17 @@ GPattern* GCanonicalDFSComputer::getCanonincal()
           tmpToken.codeToken.edgeLabel     = pPattern->v_Tokens[i].edgeLabel;
           tmpToken.codeToken.nodeLabelDest = pPattern->v_Tokens[i].nodeLabelDest;
           
-          if ( smallestEdge.nodeI == smallestEdge.nodeJ)
+          if ( 1 || smallestEdge.nodeI == smallestEdge.nodeJ)
           {
             tmpToken.nodeLargeI = pPattern->v_Tokens[i].nodeFrom;
             tmpToken.nodeLargeJ = pPattern->v_Tokens[i].nodeDest;
             v_firstEdges.push_back( tmpToken );
             tmpToken.nodeLargeI = pPattern->v_Tokens[i].nodeDest;
             tmpToken.nodeLargeJ = pPattern->v_Tokens[i].nodeFrom;
+            
+            int labelTemp = tmpToken.codeToken.nodeLabelFrom;
+            tmpToken.codeToken.nodeLabelFrom = tmpToken.codeToken.nodeLabelDest;
+            tmpToken.codeToken.nodeLabelDest = labelTemp;
             v_firstEdges.push_back( tmpToken );
           }
           else if ( tmpEdge.nodeI == smallestEdge.nodeI )
@@ -800,15 +799,15 @@ GPattern* GCanonicalDFSComputer::getCanonincal()
 
  // cerr<<v_firstEdges[0].nodeLargeI<<' '<<v_firstEdges[0].nodeLargeJ<<endl;
  // cerr<<v_firstEdges[0].codeToken<<endl;
-  // cerr<<"first edges size: "<<v_firstEdges.size()<<endl;
+  //cerr<<"first edges size: "<<v_firstEdges.size()<<endl;
   // //exit(0);
   // for ( GNodeID nodeI = 0 ; nodeI <  v_firstEdges.size() ; nodeI++ ){
-  //   cerr<<v_firstEdges[nodeI].nodeLargeI<<' '<<v_firstEdges[nodeI].nodeLargeJ<<endl;
-  //   cerr<<v_firstEdges[nodeI].codeToken;
+  //  cerr<<v_firstEdges[nodeI].nodeLargeI<<' '<<v_firstEdges[nodeI].nodeLargeJ<<endl;
+  //  cerr<<v_firstEdges[nodeI].codeToken;
   // }
 
   vector<GPattern* > pats;
-  pats.push_back(new GPattern(*pPattern));
+  pats.push_back(new GPattern(pPattern));
   for ( GNodeID nodeI = 0 ; nodeI <  v_firstEdges.size() ; nodeI++ )
   {
     int mx_newToken = max(v_firstEdges.at(nodeI).codeToken.nodeLabelFrom,v_firstEdges.at(nodeI).codeToken.nodeLabelDest);
@@ -832,8 +831,8 @@ GPattern* GCanonicalDFSComputer::getCanonincal()
     {
        pats.push_back(pTestNewPat);
     }
-    //else
-    //  delete pTestNewPat;
+    else
+      delete pTestNewPat;
     
     //pTestNewPat->pop_back( cocoboolean ); // or !cocoboolean ?!
     //if ( stop )
@@ -842,9 +841,27 @@ GPattern* GCanonicalDFSComputer::getCanonincal()
     //}
   }
   //cerr.flush();
+  if (!pats.size() )
+  {
+    cerr<<"Nogenerated pats\n";
+    exit(1);
+  }
   sort(pats.begin(),pats.end(),GpatComptLt());
-  //for(int i=1;i<pats.size();++i)
-  //  delete pats[i];
+
+   for(int i=1;i<pats.size();++i)
+    delete pats[i];
+  
+  // cerr<<"sorted patterns\n";
+  // cerr<<pats.size()<<endl;
+  //  for(int i=1;i<pats.size();++i)
+  //  {
+  //    cerr<<i<<' ';
+  //     if(pats[i] != NULL && pats[i]!= pPattern && pats[i] != pats[0])
+  //     delete pats[i];
+  //     cerr<<i<<' ';
+  //  }
+  //  cerr<<pats[0];
+  // cerr<<"End of sorted patterns\n";
 
   //cerr<<"end of get can, pat numer:: "<<pats.size()<<endl; 
   return pats[0];
@@ -942,12 +959,14 @@ void GCanonicalDFSComputer::get_recurse( GEdgeAngle prevAngle,
           // If destination node not already met
           token.codeToken.direction = gForward;
           token.codeToken.nodeDest  = GNONODEID;
+          //cerr<<"add to stack:"<<token.codeToken;
           v_StackCode.push_back( token );
         }
         else
         {
           token.codeToken.direction = gBackward;
           token.codeToken.nodeDest  = GNONODEID;
+          //cerr<<"add to stack:"<<token.codeToken;
           v_StackCode.push_back( token );
         }
       }
@@ -981,12 +1000,14 @@ void GCanonicalDFSComputer::get_recurse( GEdgeAngle prevAngle,
         // If destination node not already met
         token.codeToken.direction = gForward;
         token.codeToken.nodeDest  = GNONODEID;
+        //cerr<<"add to stack:"<<token.codeToken;
         v_StackCode.push_back( token );
       }
       else
       {
         token.codeToken.direction = gBackward;
         token.codeToken.nodeDest  = GNONODEID;
+        //cerr<<"add to stack:"<<token.codeToken;
         v_StackCode.push_back( token );
       }
     }
@@ -1014,6 +1035,7 @@ void GCanonicalDFSComputer::get_recurse( GEdgeAngle prevAngle,
         token.codeToken.nodeLabelFrom = pPattern->pGraph->v_Nodes[ v_GraphIndex[0] ].label;
         token.codeToken.edgeLabel     = edge.label;
         token.codeToken.nodeLabelDest = pPattern->pGraph->v_Nodes[edge.destNodeId].label;
+        //cerr<<"add to stack:"<<token.codeToken;
         v_StackCode.push_back( token );
       }
     }
@@ -1143,6 +1165,7 @@ void GCanonicalDFSComputer::get_subRecurse( )
   {
     // Else pPattern code > current DFS tested code.
     // i.e. current DFS tested code not canonical.
+    //cerr<<"small edge, no push:\n"<<token.codeToken;
     goto cleanup;
   }
  

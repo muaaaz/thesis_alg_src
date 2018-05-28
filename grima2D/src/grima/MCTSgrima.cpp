@@ -413,7 +413,7 @@ MCTS_node* MCTSGrima::best_child(MCTS_node* cur,GToken& ext){
     }
     if(bad)
     {
-      cerr<<"bad!\n";
+      cerr<<"bad in best child!\n";
       exit(1);
     }
     //cerr<<"end of children.\n";
@@ -485,7 +485,7 @@ double MCTSGrima::roll_out( MCTS_node* cur,
                     GExtensionData  &prevData )
 {
  
-  if(de > 4 )
+  if(de > 200 )
     return 0;
   /*************************************************************************/
   // === First step : Add extension
@@ -515,17 +515,18 @@ double MCTSGrima::roll_out( MCTS_node* cur,
   //cerr<<pPattern;
   //cerr.flush();
   if(1 ){
-    
-    bool fpr = pPattern->isCanonincal();
+
+    bool fpr = 0;//pPattern->isCanonincal();
     tmppat = pPattern->getCanonincal();
-    bool spr = tmppat->isCanonincal();
+    bool spr = 1;//tmppat->isCanonincal();
+
     //cerr.flush();
     if(fpr && (!spr)){
       cerr<<"If pat is cononical, it's bad\n";
       exit(0);
     }
     else if(!fpr && !spr){
-      cerr<<"Bad\n";
+      cerr<<"Bad cononical\n";
       cerr<<pPattern;
       cerr.flush();
       cerr<<"generated pat:\n";
@@ -539,9 +540,10 @@ double MCTSGrima::roll_out( MCTS_node* cur,
       //cerr<<"generated pat:\n";
       //cerr<<tmppat;
     }
-    
+    delete tmppat;
     //exit(0);
   }
+  
   //cerr<<"-----------------------------\n";
   //cerr.flush();
   canonicalTick += clock() - firstTickTracker;
@@ -823,7 +825,7 @@ double MCTSGrima::roll_out( MCTS_node* cur,
   random_shuffle ( cur->valid_extenstions.begin(), cur->valid_extenstions.end() );
   
   //cerr<<lastExt;
-  if(!(de%100) || de < 10)
+  if(!(de%100) ) //|| de < 10)
     cerr<<"L: "<<de<<" B: "<<cur->valid_extenstions.size()
     <<" Memory: "<<tokenData.size()<<" Frequancy: "<<currentFreq
     <<" Occ: "<<nbOcc<<endl;

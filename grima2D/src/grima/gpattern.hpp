@@ -77,6 +77,8 @@ public:
   // Public Constructor/Desctructor __________________________________________//
   /// Default constructor
   GPattern();
+
+  GPattern(GPattern* pat);
   /// Destructor
   ~GPattern();
 

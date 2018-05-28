@@ -588,7 +588,7 @@ bool GPattern::isCanonincal()
    * Test if pattern code is canonical
    * @return TRUE if Pattern is canonical, FALSE if it's not.
    */
-  GCanonicalDFSComputer computer( this );
+  GCanonicalDFSComputer computer( this, false );
   bool res = computer.isCanonincal();
   return res;
 }
@@ -601,7 +601,7 @@ GPattern* GPattern::getCanonincal()
    * Test if pattern code is canonical
    * @return TRUE if Pattern is canonical, FALSE if it's not.
    */
-  GCanonicalDFSComputer computer( this );
+  GCanonicalDFSComputer computer( this, true );
   return computer.getCanonincal();
 }
 // End of GPattern::isCanonincal()

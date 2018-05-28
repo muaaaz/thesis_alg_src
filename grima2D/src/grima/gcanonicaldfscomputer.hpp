@@ -136,7 +136,7 @@ public:
   // Public Variables ________________________________________________________//
   // Public Constructor/Desctructor __________________________________________//
   /// Default constructor
-  GCanonicalDFSComputer(GPattern *pPat );
+  GCanonicalDFSComputer(GPattern *pPat, bool _compute_code );
   /// Desctructor
   ~GCanonicalDFSComputer();
 
@@ -186,7 +186,6 @@ private:
    * - The old pattern nodes (v_GraphIndex)
    */
   vector<GNodeID> v_CodeIndex;
-  vector<GNodeID> v_NewCodeIndex;
   vector<GNodeID> v_GraphIndex;
   /// Counter of nodes in the new pattern
   int nbNodes;
@@ -200,6 +199,8 @@ private:
   bool cocoboolean ;
 
   int debug_c;
+
+  bool compute_code;
   // Private Methods _________________________________________________________//
   /**
    * @brief recurse

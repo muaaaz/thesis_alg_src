@@ -60,8 +60,16 @@ GGraph::~GGraph()
 {
   // Default destructor
   for ( uint i = 0; i < v_Nodes.size(); i++ )
+  {
     v_Nodes[i].v_Edges.clear();
+    v_Nodes[i].v_Edges.shrink_to_fit();
+  }
+
   v_Nodes.clear();
+  v_Nodes.shrink_to_fit();
+
+  v_NbOccPattern.clear();
+  v_NbOccPattern.shrink_to_fit();
 }
 // End of GGraph::~GGraph()
 

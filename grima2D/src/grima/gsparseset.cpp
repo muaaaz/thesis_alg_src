@@ -67,6 +67,7 @@ GSparseSet::~GSparseSet()
 {
   /// Default destructor
   data.clear();
+  data.shrink_to_fit();
 }
 // End of GSparseSet::~GSparseSet()
 

@@ -57,9 +57,12 @@ GVocab::~GVocab()
   for ( uint i = 0; i < v_AllPatterns.size(); i++ )
     delete v_AllPatterns.at(i);
   v_AllPatterns.clear();
+  v_AllPatterns.shrink_to_fit();
   for ( uint i = 0; i < v_PatternByClass.size(); i++ )
     v_PatternByClass.at(i).clear();
   v_PatternByClass.clear();
+  v_PatternByClass.shrink_to_fit();
+  
 
 }
 // End of GVocab::~GVocab()

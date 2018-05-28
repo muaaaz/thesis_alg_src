@@ -62,6 +62,12 @@ GSubgraphIso::GSubgraphIso( GPattern *pPat, vector<GNodeID> *v_OccList ):
 //                                            vector<GNodeID> *v_OccList ):
 GSubgraphIso::~GSubgraphIso()
 {
+  v_PatternIdx.clear();
+  v_PatternIdx.shrink_to_fit();
+  
+  v_LastEdgeUsed.clear();
+  v_LastEdgeUsed.shrink_to_fit();
+  
   // Default Destructor
   // Nothing to do here
 }

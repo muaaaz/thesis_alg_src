@@ -55,6 +55,8 @@ GDatabase::~GDatabase()
   for ( uint i = 0; i < v_GClassDB.size(); i++ )
     delete v_GClassDB.at(i);
   v_GClassDB.clear();
+  v_GClassDB.shrink_to_fit();
+  
 }
 // End of GDatabase::~GDatabase()
 

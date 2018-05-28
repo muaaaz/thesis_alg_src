@@ -42,10 +42,10 @@
 //---- PUBLIC --------------------------------------------------------------//
 // Public CONSTANTS ________________________________________________________//
 // Public Constructor/Desctructor __________________________________________//
-GCanonicalDFSComputer::GCanonicalDFSComputer( GPattern *pPat ):
+GCanonicalDFSComputer::GCanonicalDFSComputer( GPattern *pPat, bool _compute_code ):
   v_CodeIndex( pPat->pGraph->v_Nodes.size() , GNONODEID ),
-  v_NewCodeIndex( pPat->pGraph->v_Nodes.size() , GNONODEID ),
-  v_GraphIndex( pPat->pGraph->v_Nodes.size() , GNONODEID )
+  v_GraphIndex( pPat->pGraph->v_Nodes.size() , GNONODEID ),
+  compute_code(_compute_code)
 {
   // Default constructor
   // Nothing to do here
@@ -65,9 +65,28 @@ GCanonicalDFSComputer::~GCanonicalDFSComputer()
   // Nothing to do here
   //we will not delete the pointer because we will return it and use it again
   //or return just the hash??
+  v_StackCode.clear();
+  v_StackCode.shrink_to_fit();
+  
+  v_Buffer.clear();
+  v_Buffer.shrink_to_fit();
+  
+  v_NewCode.clear();
+  v_NewCode.shrink_to_fit();
+  
+  v_CodeIndex.clear();
+  v_CodeIndex.shrink_to_fit();
+  
+  v_GraphIndex.clear();
+  v_GraphIndex.shrink_to_fit();
   
   //this is just a copy of hte original pattern
   delete pPattern;
+  if(!compute_code)
+  {
+    delete pTestNewPat;
+  }
+
   // we deleted pTestNewPat in the code down, no need to clear it here
 }
 // End of GCanonicalDFSComputer::~GCanonicalDFSComputer()
@@ -84,7 +103,7 @@ bool GCanonicalDFSComputer::isCanonincal()
    * Step Two   : Check in the full DFS code of the pattern if there's no clue
    *              to directly know that pattern is not canonical.
    * Step Three : If step one and step two passed, then begin a recursion to
-   *              construct all possible DFS Code of the pattern to find if
+   *              construct all possible DFS CpTestNewPatode of the pattern to find if
    *              there's a DFS Code greater than the current one.
    * @return TRUE if pattern is canonical, FALSE else.
    */
@@ -612,12 +631,12 @@ GPattern* GCanonicalDFSComputer::getCanonincal()
     tmpToken.nodeDest = temp_lable;
 
     pTestNewPat->push_back( tmpToken, cocoboolean  );
-    return pTestNewPat;
+    return new GPattern(pTestNewPat);
   }
   else if ( pPattern->v_Tokens.size() == 1 )
   {
     pTestNewPat->push_back( tmpToken, cocoboolean  );
-    return pTestNewPat;
+    return new GPattern(pTestNewPat);
   }
 
   int smallest_edge_idx = 0;
@@ -832,8 +851,9 @@ GPattern* GCanonicalDFSComputer::getCanonincal()
        pats.push_back(pTestNewPat);
     }
     else
+    {  
       delete pTestNewPat;
-    
+    }
     //pTestNewPat->pop_back( cocoboolean ); // or !cocoboolean ?!
     //if ( stop )
     //{
@@ -847,8 +867,8 @@ GPattern* GCanonicalDFSComputer::getCanonincal()
     exit(1);
   }
   sort(pats.begin(),pats.end(),GpatComptLt());
-
-   for(int i=1;i<pats.size();++i)
+  GPattern* ret = new GPattern(pats[0]);
+   for(int i=0;i<pats.size();++i)
     delete pats[i];
   
   // cerr<<"sorted patterns\n";
@@ -864,7 +884,7 @@ GPattern* GCanonicalDFSComputer::getCanonincal()
   // cerr<<"End of sorted patterns\n";
 
   //cerr<<"end of get can, pat numer:: "<<pats.size()<<endl; 
-  return pats[0];
+  return ret;
   /* ==============================================
    * TAG : NODE_OCCURENCY_FILTER
    * ============================================== */

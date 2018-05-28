@@ -82,7 +82,6 @@ public:
   /// Graph Memory ID
   GGraph *pGraph;
 
-
   /// Default constructor
   GSparseSet();
 

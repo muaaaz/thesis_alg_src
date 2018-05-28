@@ -63,6 +63,7 @@ GExtensionCollect::~GExtensionCollect()
 {
   // Default Destructor
   m_Extensions.clear();
+  
 }
 // End of GExtensionCollect::~GExtensionCollect()
 

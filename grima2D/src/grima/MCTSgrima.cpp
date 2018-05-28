@@ -516,9 +516,10 @@ double MCTSGrima::roll_out( MCTS_node* cur,
   //cerr.flush();
   if(1 ){
 
-    bool fpr = 0;//pPattern->isCanonincal();
+    bool fpr = pPattern->isCanonincal();
+    
     tmppat = pPattern->getCanonincal();
-    bool spr = 1;//tmppat->isCanonincal();
+    bool spr = tmppat->isCanonincal();
 
     //cerr.flush();
     if(fpr && (!spr)){

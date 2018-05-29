@@ -115,9 +115,12 @@ public:
    */
   bool isCanonincal();
 
-  GPattern* getCanonincal();
+  GPattern* getCanonincalPattern();
 
+  string token_to_string(GToken token);
 
+  string getCanonincalString();
+  
   void printOcc();
 
 

@@ -594,7 +594,7 @@ bool GPattern::isCanonincal()
 }
 // End of GPattern::isCanonincal()
 
-GPattern* GPattern::getCanonincal()
+GPattern* GPattern::getCanonincalPattern()
 {
   /*
    * @brief isCanonincal
@@ -605,6 +605,46 @@ GPattern* GPattern::getCanonincal()
   return computer.getCanonincal();
 }
 // End of GPattern::isCanonincal()
+
+string GPattern::token_to_string(GToken ob)
+{
+  string ret = "";
+  ret += to_string(ob.direction);
+  ret += ",";
+  ret += to_string(ob.nodeFrom);
+  ret += ",";
+  ret += to_string(ob.nodeDest);
+  ret += ",";
+  ret += to_string(ob.angle);
+  ret += ",";
+  ret += to_string(ob.nodeLabelFrom);
+  ret += ",";
+  ret += to_string(ob.nodeLabelDest);
+  ret += ",";
+  ret += to_string(ob.edgeLabel);
+  ret += "|";
+  return ret;
+}
+
+string GPattern::getCanonincalString()
+{
+  /*
+   * @brief isCanonincal
+   * Test if pattern code is canonical
+   * @return TRUE if Pattern is canonical, FALSE if it's not.
+   */
+  GCanonicalDFSComputer computer( this, true );
+  GPattern* tmpPat = computer.getCanonincal();
+  vector<GToken>& vec = tmpPat->v_Tokens;
+  string ret = "";
+  for(int i = 0 ; i<vec.size() ; ++i)
+    ret += token_to_string(vec[i]);
+  delete tmpPat;
+  return ret;
+}
+// End of GPattern::isCanonincal()
+
+
 
 void GPattern::printOcc()
 {

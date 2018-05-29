@@ -169,9 +169,14 @@ struct GClassDB {
   /// List of all 1-edge canonical DFS code occure
   map<GToken,GTokenData,GTokenGt> m_TokenData;
 
+  int number_of_classes;
+  int number_of_graphs;
+  vector<int> class_count;
   /// Default constructor
   GClassDB():
-    className("")
+    className(""),
+    number_of_classes(0),
+    number_of_graphs(0)
   {
     v_ClassGraphs.resize(0);
   }
@@ -204,6 +209,7 @@ public:
   // Public Variables_________________________________________________________//
   /// Vector of GClassDB object, ie each class with their graph
   vector<GClassDB*> v_GClassDB;
+
 
   // Public Constructor/Desctructor __________________________________________//
   /// Default constructor

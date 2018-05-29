@@ -31,6 +31,7 @@
 // -- C++ STL Lib
 #include <fstream>
 #include <algorithm>
+#include <set>
 // Include project class
 #include "../global.hpp"
 #include "gdatabase.hpp"
@@ -102,6 +103,7 @@ void GDatabase::read( string filename )
    * @param filename : File path where graph are stored
    * @return A vector of structure that store graph by class with class infos.
    */
+  set<int > classes_numbers;
   if ( PARAM.DEBUG_MODE )
     cout << "#- Parse graphs files." << endl;
 
@@ -117,6 +119,8 @@ void GDatabase::read( string filename )
   data->getLine( &v_Tokens );
 
   suppGraphID = 0;
+  // classes are 1-indexed
+  tmpGClassDB->class_count.push_back(0);
 
   while ( !data->finished() )
   {
@@ -139,11 +143,17 @@ void GDatabase::read( string filename )
       //tmpGClassDB = new GClassDB();
       tmpGClassDB->className = graph->className;
       suppGraphID = 1;
+      tmpGClassDB->class_count.push_back(0);
     }
     graph->classID = tmpClassID;
     // Add graph to class database
     tmpGClassDB->v_ClassGraphs.push_back( graph );
+
+    tmpGClassDB->class_count[tmpClassID]++;
+    classes_numbers.insert(tmpClassID);
+    tmpGClassDB->number_of_graphs++;
   }
+  tmpGClassDB->number_of_classes = classes_numbers.size();
   if ( tmpGClassDB->v_ClassGraphs.size() != 0 )
     v_GClassDB.push_back( tmpGClassDB );
   // Free memory by closing the file.

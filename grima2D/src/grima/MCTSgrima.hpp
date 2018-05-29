@@ -101,7 +101,17 @@ public:
 
   unordered_map< string , int > nodes_pointers;
 
+  double delta;
+  int N_delta;
 
+  vector<int> class_count;
+
+  int number_of_classes;
+  int number_of_graphs;
+
+  MCTS_node* last_father;
+
+  int roll_depth;
   // Public Structure & Typedef ______________________________________________//
   // Public Constructor/Desctructor __________________________________________//
   /**
@@ -150,21 +160,25 @@ public:
 
   MCTS_node* best_child(MCTS_node* cur,GToken& ext);
 
-  MCTS_node* select(MCTS_node* cur, GPattern* pPattern); 
+  //MCTS_node* select(MCTS_node* cur, GPattern* pPattern); 
+  MCTS_node* select(MCTS_node* cur, GPattern* pPattern);
 
   MCTS_node* expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp);
 
-  double roll_out( MCTS_node* cur, 
-                    const vector<GGraph*>& v_Graphs,
-                    const GGlobFreq       minFreq,    //Mininmum global frequency
-                    GPattern*        pPattern,
-                    const GToken&    lastExt, 
-                    GTokenData      &tokenData,
-                    GExtensionData  &suppData,   // Tmp variable, supposed frequency
-                    GExtensionData  &prevData);
+  int roll_out(MCTS_node* cur, 
+                const vector<GGraph*>& v_Graphs,
+                const GGlobFreq       minFreq,    //Mininmum global frequency
+                GPattern*        pPattern,
+                const GToken&    lastExt, 
+                GTokenData      &tokenData,
+                GExtensionData  &suppData,   // Tmp variable, supposed frequency
+                GExtensionData  &prevData);
 
   void update_ancestors(MCTS_node* cur, double delta); 
 
+  double WRAcc(GTokenData& tokenData,int classID,int support); 
+
+  void delete_tree_node(MCTS_node* dad,MCTS_node* cur);
   //---- PROTECTED  ----------------------------------------------------------//
 protected:
   // Protected CONSTANTS _____________________________________________________//

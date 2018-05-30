@@ -60,8 +60,8 @@ public:
 
   // Public CONSTANTS ________________________________________________________//
   // Public variables ________________________________________________________//
-  /// pointer fo parent node
-  MCTS_node* parent;
+  /// pointers to parents nodes
+  vector<MCTS_node*> parents;
   // the valise of the N parameter of the MCTS algorithm
   int N_node;
   // the value of the Q function "the evaluation function"

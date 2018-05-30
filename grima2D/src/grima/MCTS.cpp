@@ -55,7 +55,7 @@ using namespace std;
 
 
 MCTS_node::MCTS_node():
-  parent(NULL),
+  parents(vector<MCTS_node*>()),
   N_node(0),
   Q(-1),
   is_fully_expanded(false),
@@ -72,7 +72,7 @@ MCTS_node::MCTS_node():
 }
 
 MCTS_node::MCTS_node(MCTS_node* _parent_):
-  parent(_parent_),
+  parents(vector<MCTS_node*>()),
   N_node(0),
   Q(-1),
   is_fully_expanded(false),
@@ -82,6 +82,7 @@ MCTS_node::MCTS_node(MCTS_node* _parent_):
    * TODO : RD
    * Copy Desc
    */
+  parents.push_back(_parent_);
   children_nodes    = new map<GToken, MCTS_node*,     GTokenGt>();
   valid_extenstions = vector<pair<GToken, GExtensionData> > ();
   children_nodes->clear();
@@ -109,6 +110,8 @@ MCTS_node::~MCTS_node()
   node_tokenData.v_SparseOcc.shrink_to_fit();
   valid_extenstions.clear();
   valid_extenstions.shrink_to_fit();
-
+  parents.clear();
+  parents.shrink_to_fit();
+  
   delete children_nodes;
 }

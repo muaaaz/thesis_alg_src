@@ -99,7 +99,7 @@ public:
   float minF;
   GClassDB* pClassDB;
 
-  unordered_map< string , int > nodes_pointers;
+  unordered_map< string , MCTS_node* > nodes_pointers;
 
   double delta;
   int N_delta;
@@ -112,6 +112,8 @@ public:
   MCTS_node* last_father;
 
   int roll_depth;
+
+  bool do_update;
   // Public Structure & Typedef ______________________________________________//
   // Public Constructor/Desctructor __________________________________________//
   /**
@@ -165,7 +167,11 @@ public:
 
   MCTS_node* expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp);
 
-  int roll_out(MCTS_node* cur, 
+  void add_parent(MCTS_node* cur,MCTS_node* parent,const GToken& lastExt);
+
+  int roll_out( MCTS_node* cur, 
+                MCTS_node* parent,
+                bool rollout_first_level,
                 const vector<GGraph*>& v_Graphs,
                 const GGlobFreq       minFreq,    //Mininmum global frequency
                 GPattern*        pPattern,
@@ -178,7 +184,7 @@ public:
 
   double WRAcc(GTokenData& tokenData,int classID,int support); 
 
-  void delete_tree_node(MCTS_node* dad,MCTS_node* cur);
+  void delete_tree_node(MCTS_node* cur);
   //---- PROTECTED  ----------------------------------------------------------//
 protected:
   // Protected CONSTANTS _____________________________________________________//

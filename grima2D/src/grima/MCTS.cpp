@@ -55,8 +55,8 @@ using namespace std;
 
 
 MCTS_node::MCTS_node():
-  parents(vector<MCTS_node*>()),
-  N_node(0),
+  parents(vector<MCTS_node*>(0,0)),
+  N_node(1),
   Q(-1),
   is_fully_expanded(false),
   occ_list_is_computed(false)
@@ -65,23 +65,26 @@ MCTS_node::MCTS_node():
    * TODO : RD
    * Copy Desc
    */
+  parents.clear();
   children_nodes    = new map<GToken, MCTS_node*,     GTokenGt>();
   valid_extenstions = vector<pair<GToken, GExtensionData> > ();
   children_nodes->clear();
   valid_extenstions.clear();
 }
 
-MCTS_node::MCTS_node(MCTS_node* _parent_):
-  parents(vector<MCTS_node*>()),
-  N_node(0),
+MCTS_node::MCTS_node(MCTS_node* _parent_,GToken ext):
+  parents(vector<MCTS_node*>(0,0)),
+  N_node(1),
   Q(-1),
   is_fully_expanded(false),
-  occ_list_is_computed(false)
+  occ_list_is_computed(false),
+  lastExt(ext)
 {
   /*
    * TODO : RD
    * Copy Desc
    */
+  parents.clear();
   parents.push_back(_parent_);
   children_nodes    = new map<GToken, MCTS_node*,     GTokenGt>();
   valid_extenstions = vector<pair<GToken, GExtensionData> > ();

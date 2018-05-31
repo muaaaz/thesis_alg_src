@@ -80,7 +80,7 @@ public:
   vector<pair<GToken, GExtensionData> > valid_extenstions;
   GTokenData      node_tokenData;
 
-
+  GToken lastExt;
 
   // Public Structure & Typedef ______________________________________________//
   // Public Constructor/Desctructor __________________________________________//
@@ -91,7 +91,7 @@ public:
    */
   MCTS_node();
 
-  MCTS_node(MCTS_node* _parent_);
+  MCTS_node(MCTS_node* _parent_,GToken ext);
 
   /**
    * @brief ~MCTS

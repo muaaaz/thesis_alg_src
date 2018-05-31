@@ -163,11 +163,13 @@ public:
   MCTS_node* best_child(MCTS_node* cur,GToken& ext);
 
   //MCTS_node* select(MCTS_node* cur, GPattern* pPattern); 
-  MCTS_node* select(MCTS_node* cur, GPattern* pPattern);
+  MCTS_node* select(MCTS_node* cur);
 
   MCTS_node* expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp);
 
   void add_parent(MCTS_node* cur,MCTS_node* parent,const GToken& lastExt);
+
+  void build_pattern(MCTS_node* selcted_node, GPattern* pPattern);
 
   int roll_out( MCTS_node* cur, 
                 MCTS_node* parent,

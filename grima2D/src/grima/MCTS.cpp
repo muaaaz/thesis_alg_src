@@ -109,6 +109,12 @@ MCTS_node::~MCTS_node()
   //  //delete node_tokenData.v_SparseOcc[i].pGraph;
   //}
 
+
+  for(int i=0;i<node_tokenData.v_SparseOcc.size();++i)
+  {
+    node_tokenData.v_SparseOcc[i].clear();
+  }
+  
   node_tokenData.v_SparseOcc.clear();
   node_tokenData.v_SparseOcc.shrink_to_fit();
   valid_extenstions.clear();

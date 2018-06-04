@@ -133,6 +133,8 @@ public:
   void remove( uint i );
 
 
+  void clear();
+
   //  bool contains( mapEdge e )
   //  {
   //    /*

@@ -201,4 +201,14 @@ void GSparseSet::swap( mapEdge ei, mapEdge ej )
   swap( i, j );
 }
 
+void GSparseSet::clear()
+{
+  /*
+   * TODO : RD
+   * Copy desc
+   */
+  data.clear();
+  data.shrink_to_fit();
+}
+
 //============================== OPERATOR OVERLOAD  ==========================//

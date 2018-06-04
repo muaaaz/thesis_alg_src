@@ -384,7 +384,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
         cerr<<"pad delete, children number: "<<last_father->children_nodes->size()<<"\n";
       }
       delete_tree_node(last_father);
-      
+      delete currentPattern;
       budget++;
       continue;
     }
@@ -454,6 +454,12 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     {
       budget++;
     }
+    for(int i=0;i<tmp_GTokenData.v_SparseOcc.size();++i)
+    {
+      tmp_GTokenData.v_SparseOcc[i].clear();
+    }
+    tmp_GTokenData.v_SparseOcc.clear();
+    tmp_GTokenData.v_SparseOcc.shrink_to_fit();
     delete currentPattern;
   }
 
@@ -515,7 +521,7 @@ MCTS_node* MCTSGrima::select(MCTS_node* cur)
   int cc = 1;
   //cerr<<"start selcetion\n";
   while(mx_depth--){ // some stopping condition should we change this?
-    cerr<<"go deeper "<<cc<<" node address: "<<cur<<endl;
+    //cerr<<"go deeper "<<cc<<" node address: "<<cur<<endl;
     if(!cur->is_fully_expanded)
     {
       //cerr<<"sel return "<<cur<<endl;
@@ -813,8 +819,23 @@ int MCTSGrima::roll_out(MCTS_node* cur,
       }
     }
 
+    tokenData.v_SparseOcc.at(iGraph).data.shrink_to_fit();
+
   }
  
+
+  for ( int iGraph = 0 ; iGraph < tokenData.v_SparseOcc.size() ; iGraph++ )
+  {
+    if (tokenData.v_SparseOcc[iGraph].size() == 0)
+    {
+      tokenData.v_SparseOcc[iGraph] = tokenData.v_SparseOcc.back();
+      tokenData.v_SparseOcc.pop_back();
+      --iGraph;
+    }
+  }
+
+  tokenData.v_SparseOcc.shrink_to_fit();
+
   //if(del)
   //  cerr<<"\n";
   if(rollout_first_level)
@@ -942,7 +963,7 @@ int MCTSGrima::roll_out(MCTS_node* cur,
 
   //cerr<<lastExt;
   //if(!(de%100) || de < 10)
-  if( 1 || de > 100 )
+  if( 0 && de > 100 )
     cerr<<"L: "<<de<<" B: "<< tmp_vec.size()
     <<" Memory: "<<tokenData.size()<<" Frequancy: "<<currentFreq
     <<" Occ: "<<nbOcc<<endl;
@@ -987,6 +1008,7 @@ int MCTSGrima::roll_out(MCTS_node* cur,
   //  cur_Q = max( cur_Q , WRAcc(tokenData,i,currentFreq) ); 
 
   cur_Q = WRAcc(tokenData,current_class_id,currentFreq);
+
   if(cur_Q < -1000000 || cur_Q > 1000000)
     cerr<<"cur_Q: "<<cur_Q<<endl;
   delta += cur_Q;
@@ -1056,6 +1078,8 @@ void MCTSGrima::delete_tree_node(MCTS_node* cur)
     {
        dad->children_nodes->erase(it);
     }
+    it_vec.clear();
+    it_vec.shrink_to_fit();
   }
 
   // delete connections from sons "no need"

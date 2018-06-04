@@ -114,6 +114,8 @@ public:
   int roll_depth;
 
   bool do_update;
+
+  int current_class_id;
   // Public Structure & Typedef ______________________________________________//
   // Public Constructor/Desctructor __________________________________________//
   /**
@@ -123,7 +125,7 @@ public:
    */
   MCTSGrima();
 
-  MCTSGrima(float _minf,GClassDB* _pClassDB);
+  MCTSGrima(float _minf,GClassDB* _pClassDB,int class_id);
   /**
    * @brief ~G
    * Default Destructor

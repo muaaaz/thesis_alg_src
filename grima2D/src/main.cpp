@@ -123,6 +123,7 @@ void parseArg( int argc, char **argv, param &PARAM )
     {         "pattern", required_argument, 0, 'p'},
     {     "patternStat", required_argument, 0, 'x'},
     {  "exclude100Freq",       no_argument, 0, 'X'},
+    {         "classID", required_argument, 0, 'c'},
     {            "help",       no_argument, 0,  0 },
     {                 0,                 0, 0,  0 }
   };
@@ -198,6 +199,9 @@ void parseArg( int argc, char **argv, param &PARAM )
       break;
     case 'x':
       PARAM.PAT_STAT_FILE = optarg;
+      break;
+    case 'c':
+      PARAM.current_class_id = atoi(optarg);
       break;
     default:
       help();
@@ -327,7 +331,8 @@ int main( int argc, char **argv )
   //{
   grima.minF      = PARAM.MINFREQ;
   grima.pClassDB  = graphDB.v_GClassDB.at(0);
-  
+  grima.current_class_id = PARAM.current_class_id;
+
   returnStatus = grima.processMining();
   grima.v_ReturnStatus.push_back(returnStatus);
   if ( returnStatus == -1 ) // I.E. TIMEOUT

@@ -57,7 +57,7 @@ using namespace std;
 MCTS_node::MCTS_node():
   parents(vector<MCTS_node*>(0,0)),
   N_node(1),
-  Q(-1),
+  Q(0),
   is_fully_expanded(false),
   occ_list_is_computed(false)
 {
@@ -75,7 +75,7 @@ MCTS_node::MCTS_node():
 MCTS_node::MCTS_node(MCTS_node* _parent_,GToken ext):
   parents(vector<MCTS_node*>(0,0)),
   N_node(1),
-  Q(-1),
+  Q(0),
   is_fully_expanded(false),
   occ_list_is_computed(false),
   lastExt(ext)

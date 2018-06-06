@@ -200,9 +200,6 @@ void parseArg( int argc, char **argv, param &PARAM )
     case 'x':
       PARAM.PAT_STAT_FILE = optarg;
       break;
-    case 'c':
-      PARAM.current_class_id = atoi(optarg);
-      break;
     default:
       help();
       exit( EXIT_FAILURE );
@@ -302,50 +299,35 @@ int incremental_counter = 0;
 int main( int argc, char **argv )
 {
 
-  // //test mod
+  cout << "#==== START OF MCTS GRIMA !" << endl;
 
-  // GPattern pat1 = new GPattern();
-  // GPattern pat2 = new GPattern();
-  // GToken tmp;
-
-  // tmp
-
-
-
-
-  // // end of test mod
-  // return 0;
-  cout << "#==== START OF GRIMA !" << endl;
-
-  int returnStatus = 0;
   GDatabase graphDB;
   MCTSGrima grima;
-  bool timeOutOverride = false;
 
   parseArg( argc, argv, PARAM );
 
-  graphDB.createGrapheDB( PARAM.INFILE );
-  grima.initNbPatternByClass( graphDB.v_GClassDB );
+  cerr <<"input file "<< PARAM.INFILE << endl;
+  cerr <<"output file "<< PARAM.OUTDIR << endl;
+  cerr <<"time "<< PARAM.TIMEOUT << endl;
+  cerr <<"freq "<< PARAM.MINFREQ << endl;
 
-  //for ( uint iClassDB = 0; iClassDB < graphDB.v_GClassDB.size(); iClassDB++ )
-  //{
+  graphDB.createGrapheDB( PARAM.INFILE );
   grima.minF      = PARAM.MINFREQ;
   grima.pClassDB  = graphDB.v_GClassDB.at(0);
-  grima.current_class_id = PARAM.current_class_id;
+  grima.v_ClassName = graphDB.v_ClassName;
 
-  returnStatus = grima.processMining();
-  grima.v_ReturnStatus.push_back(returnStatus);
-  if ( returnStatus == -1 ) // I.E. TIMEOUT
+  grima.initNbPatternByClass( );
+  for ( int iClassDB = 1; iClassDB <= grima.pClassDB->number_of_classes; iClassDB++ )
   {
-    timeOutOverride = true;
-    cerr << "Timeout reached!"<< endl;
+    grima.current_class_id = iClassDB;
+    grima.processMining();
+    cerr<<"start clean\n";
+    grima.clean();
+    cerr<<"end clean\n";
   }
-  else if ( returnStatus == -2 ) // Nb pattern reached
-  {
-    cerr << "Nb Pattern reached!" << endl;
-  }
-  //}
-  grima.saveData( timeOutOverride );
-  cout << "#==== END OF GRIMA !" << endl;
+  
+  grima.saveData();
+  cout << "#==== END OF MCTS GRIMA !" << endl;
+  exit(0);
 }
 // End of main( int argc, char **argv )

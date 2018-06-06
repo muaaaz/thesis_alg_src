@@ -92,33 +92,35 @@ void GVocab::saveVocab( string filename, vector<string> v_ClassName, vector<int>
 {
   ofstream patFile;
   patFile.open( filename );
-  for ( uint iClass = 0; iClass < v_ReturnStatus.size(); iClass++ )
-  {
-    if ( v_ReturnStatus.at(iClass) == -1  )
-      patFile << "# INCOMPLETE MINING !! TIMEOUT REACHED (" << PARAM.TIMEOUT
-              << "H) for class " << v_ClassName.at(iClass) << endl;
-    else if ( v_ReturnStatus.at(iClass) == -2  )
-      patFile << "# INCOMPLETE MINING !! NB PAT LIMIT REACHED (" << PARAM.NBPATLIMIT
-              << ") for class " << v_ClassName.at(iClass) << endl;
-  }
+  v_ReturnStatus.clear();
+  // for ( uint iClass = 0; iClass < v_ReturnStatus.size(); iClass++ )
+  // {
+  //   if ( v_ReturnStatus.at(iClass) == -1  )
+  //     patFile << "# INCOMPLETE MINING !! TIMEOUT REACHED (" << PARAM.TIMEOUT
+  //             << "H) for class " << v_ClassName.at(iClass) << endl;
+  //   else if ( v_ReturnStatus.at(iClass) == -2  )
+  //     patFile << "# INCOMPLETE MINING !! NB PAT LIMIT REACHED (" << PARAM.NBPATLIMIT
+  //             << ") for class " << v_ClassName.at(iClass) << endl;
+  // }
   patFile << "NbFreqPattern : " << v_AllPatterns.size() << endl;
   for ( uint iPat = 0; iPat < v_AllPatterns.size(); iPat++ )
     patFile << v_AllPatterns.at(iPat);
   patFile.close();
 
+
   for ( uint iClass = 0; iClass < v_PatternByClass.size(); iClass++ )
   {
     for ( uint iPat = 0; iPat < v_PatternByClass.at(iClass).size(); iPat++ )
       v_PatternByClass.at(iClass).at(iPat)->pGraph->graphID = iPat;
-
     patFile.open( filename + "." + v_ClassName.at(iClass) );
-    if ( v_ReturnStatus.at(iClass) == -1  )
-      patFile << "# INCOMPLETE MINING !! TIMEOUT REACHED (" << PARAM.TIMEOUT
-              << "H) for class " << v_ClassName.at(iClass) << endl;
-    else if ( v_ReturnStatus.at(iClass) == -2  )
-      patFile << "# INCOMPLETE MINING !! NB PAT LIMIT REACHED (" << PARAM.NBPATLIMIT
-              << ") for class " << v_ClassName.at(iClass) << endl;
+    // if ( v_ReturnStatus.at(iClass) == -1  )
+    //   patFile << "# INCOMPLETE MINING !! TIMEOUT REACHED (" << PARAM.TIMEOUT
+    //           << "H) for class " << v_ClassName.at(iClass) << endl;
+    // else if ( v_ReturnStatus.at(iClass) == -2  )
+    //   patFile << "# INCOMPLETE MINING !! NB PAT LIMIT REACHED (" << PARAM.NBPATLIMIT
+    //           << ") for class " << v_ClassName.at(iClass) << endl;
     patFile << "NbFreqPattern : " <<  v_PatternByClass.at(iClass).size() << endl;
+
     for ( uint iPat = 0; iPat < v_PatternByClass.at(iClass).size(); iPat++ )
       patFile << v_PatternByClass.at(iClass).at(iPat);
     patFile.close();

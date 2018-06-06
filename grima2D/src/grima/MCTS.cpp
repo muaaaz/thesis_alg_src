@@ -72,13 +72,14 @@ MCTS_node::MCTS_node():
   valid_extenstions.clear();
 }
 
-MCTS_node::MCTS_node(MCTS_node* _parent_,GToken ext):
+MCTS_node::MCTS_node(MCTS_node* _parent_,GToken ext,long long ID):
   parents(vector<MCTS_node*>(0,0)),
   N_node(1),
   Q(0),
   is_fully_expanded(false),
   occ_list_is_computed(false),
-  lastExt(ext)
+  lastExt(ext),
+  nodeID(ID)
 {
   /*
    * TODO : RD
@@ -110,7 +111,7 @@ MCTS_node::~MCTS_node()
   //}
 
 
-  for(int i=0;i<node_tokenData.v_SparseOcc.size();++i)
+  for(int i=0;i < int(node_tokenData.v_SparseOcc.size());++i)
   {
     node_tokenData.v_SparseOcc[i].clear();
   }

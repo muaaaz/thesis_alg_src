@@ -141,6 +141,7 @@ void GDatabase::read( string filename )
       //  delete tmpGClassDB;
 
       //tmpGClassDB = new GClassDB();
+      v_ClassName.push_back(graph->className);
       tmpGClassDB->className = graph->className;
       suppGraphID = 1;
       tmpGClassDB->class_count.push_back(0);

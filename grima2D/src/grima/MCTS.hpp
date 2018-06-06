@@ -61,6 +61,7 @@ public:
   // Public CONSTANTS ________________________________________________________//
   // Public variables ________________________________________________________//
   /// pointers to parents nodes
+  long long nodeID;
   vector<MCTS_node*> parents;
   // the valise of the N parameter of the MCTS algorithm
   int N_node;
@@ -70,6 +71,9 @@ public:
   bool is_fully_expanded;
   //
   bool occ_list_is_computed;
+  
+  GToken lastExt;
+  
   // possible extentions
   map<GToken, MCTS_node*, GTokenGt>* children_nodes;
   
@@ -80,7 +84,7 @@ public:
   vector<pair<GToken, GExtensionData> > valid_extenstions;
   GTokenData      node_tokenData;
 
-  GToken lastExt;
+  
 
   // Public Structure & Typedef ______________________________________________//
   // Public Constructor/Desctructor __________________________________________//
@@ -91,7 +95,7 @@ public:
    */
   MCTS_node();
 
-  MCTS_node(MCTS_node* _parent_,GToken ext);
+  MCTS_node(MCTS_node* _parent_,GToken ext,long long ID);
 
   /**
    * @brief ~MCTS

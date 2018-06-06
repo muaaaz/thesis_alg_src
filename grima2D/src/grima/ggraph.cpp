@@ -650,9 +650,9 @@ vector<GNodeID> GGraph::processFrameHole()
     cout << "- Process frame hole in graphs." << endl;
 
   vector<GNodeID> v_IdNodeToDelete;
-  for ( uint i = 0; i < dim.xdim*dim.ydim; i++ )
+  for ( uint i = 0; i < uint(dim.xdim*dim.ydim); i++ )
   {
-    for ( uint j = 1 ; j < dim.tdim; j++ )
+    for ( uint j = 1 ; j < uint(dim.tdim); j++ )
     {
       if ( v_Nodes.at( i + ( (j-1)*dim.xdim*dim.ydim ) ).label
            == v_Nodes.at( i+(j*dim.xdim*dim.ydim) ).label

@@ -49,6 +49,7 @@
 struct GExtensionData {
   /// Frequency of extension
   GGlobFreq frequency;
+  int current_class_frequency;
   /// Vector that store graph were occurency
   vector<GTid>    v_Graphs;
   vector<GNodeID> v_OccList;
@@ -78,10 +79,10 @@ public:
   /// Minimum global threshold
   GGlobFreq minFreqG;
   clock_t mapExtTick;
-
+  int current_class_id;
   // Public Constructor/Desctructor __________________________________________//
   /// Default constructor
-  GExtensionCollect( GGlobFreq minFG );
+  GExtensionCollect( GGlobFreq minFG , int ID);
 
   /// Desctructor
   ~GExtensionCollect();

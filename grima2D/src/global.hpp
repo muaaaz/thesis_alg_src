@@ -91,7 +91,6 @@ struct param {
   //
   double C_p;
 
-  int current_class_id;
 
   param():
     INFILE(""),
@@ -117,8 +116,8 @@ struct param {
     MAXLBL(-1),
     TEMP_FIRST(false),
     SPAT_FIRST(true),
-    C_p(0.5),
-    current_class_id(1)
+    C_p(0.5)
+
   {
     // Nothing to put here
   }

@@ -46,10 +46,12 @@ using namespace std;
 
 //============================ STRUCT & TYPEDEF ==============================//
 
+
 //=============================== VARIABLES ==================================//
 // Will be used in cmpGToken when extending spatFirst or tempFirst
 GToken tmpT1 = GToken();
 GToken tmpT2 = GToken();
+
 
 int de_arr[10000];
 int sel_arr[10000];
@@ -69,7 +71,8 @@ MCTSGrima::MCTSGrima():
   canonicalTick(0),
   extensionTick(0),
   subgraphisoTick(0),
-  current_class_id(0)
+  current_class_id(0),
+  nodes_counter(0)
 {
   /*
    * TODO : RD
@@ -121,12 +124,16 @@ MCTSGrima::~MCTSGrima()
 // Accessor __________________________________________________________________//
 // Mutator ___________________________________________________________________//
 // Public Methods ____________________________________________________________//
-void MCTSGrima::initNbPatternByClass( vector<GClassDB*> v_GClassDB )
+void MCTSGrima::initNbPatternByClass( )
 {
-  v_NbPatternByClass.resize( v_GClassDB.size(), 0 );
-  v_nbClosedPatClass.resize( v_GClassDB.size(), 0 );
-  for ( uint iClass = 0; iClass < v_GClassDB.size(); iClass++ )
-    v_ClassName.push_back( v_GClassDB.at(iClass)->className );
+  number_of_classes =  pClassDB->number_of_classes;
+  number_of_graphs =  pClassDB->number_of_graphs;
+  class_count = pClassDB->class_count;
+
+  v_NbPatternByClass.resize( number_of_classes + 1, 0 );
+  v_nbClosedPatClass.resize( number_of_classes + 1, 0 );
+  //for ( uint iClass = 0; iClass < v_GClassDB.size(); iClass++ )
+  //  v_ClassName.push_back( v_GClassDB.at(iClass)->className );
 }
 // End of Grima::initNbPatternByClass( int nbClass )
 
@@ -135,7 +142,7 @@ void MCTSGrima::initNbPatternByClass( vector<GClassDB*> v_GClassDB )
 //===========================================================================//
 void print(vector<int> vec)
 {
-  for(int i=0;i<vec.size();i++)
+  for(int i=0;i< int(vec.size());i++)
     cout<<vec[i]<<' ';
   cout<<endl;
 }
@@ -146,6 +153,12 @@ int MCTSGrima::processMining( )
    * TODO : RD
    * Copy desc
    */
+
+  if(pattern_buffer_set.size())
+  {
+    cerr<<"est not clear\n";
+    exit(1);
+  }
   
   memset(de_arr,0,sizeof de_arr);
   memset(sel_arr,0,sizeof sel_arr);
@@ -158,9 +171,7 @@ int MCTSGrima::processMining( )
 
   v_PatternCurrClass.clear();
   
-  number_of_classes =  pClassDB->number_of_classes;
-  number_of_graphs =  pClassDB->number_of_graphs;
-  class_count = pClassDB->class_count;
+  
 
   // cerr<<"number_of_classes: "<<number_of_classes<<endl;
   // cerr<<"number_of_graphs: "<<number_of_graphs<<endl;
@@ -173,7 +184,7 @@ int MCTSGrima::processMining( )
   // ============ ALL MINING STUFF BEGIN HERE !!!!!
 
   if ( minF <= 1 )
-    minFreq = (int) round( minF * pClassDB->v_ClassGraphs.size() );
+    minFreq = (int) round( minF * class_count[current_class_id] );
   else
     minFreq = minF;
 
@@ -181,42 +192,43 @@ int MCTSGrima::processMining( )
   returnStatus = search( pClassDB->v_ClassGraphs, pClassDB->m_TokenData, minFreq);
   totalTick    += clock() - firstTick;
  
-  vocabPattern->v_PatternByClass.push_back( v_PatternCurrClass );
-
+  unbuffer_class_patterns();
+  
   //  sort( vocabPattern->v_AllPatterns.begin(), vocabPattern->v_AllPatterns.end(), GpatComptLt() );
 
-  for ( uint iPat = 0; iPat < vocabPattern->v_AllPatterns.size(); iPat++ )
+  for ( uint iPat = 0; iPat < uint(vocabPattern->v_AllPatterns.size()) ; iPat++ )
     vocabPattern->v_AllPatterns.at(iPat)->pGraph->graphID = iPat;
 
   return returnStatus;
 }
 // End of Grima::processMining( double minF , GClassDB *pClassDB )
 
-void MCTSGrima::saveData( bool timeOutOverride )
+void MCTSGrima::saveData( )
 {
   vocabPattern->saveVocab( PARAM.OUTDIR + PARAM.PATFILE, v_ClassName, v_ReturnStatus );
   ofstream patFile;
   patFile.open( PARAM.OUTDIR + PARAM.PAT_STAT_FILE );
-  for ( uint iClass = 0; iClass < v_ReturnStatus.size(); iClass++ )
-  {
-    if ( v_ReturnStatus.at(iClass) == -1 || timeOutOverride )
-      patFile << "# INCOMPLETE MINING !! TIMEOUT REACHED (" << PARAM.TIMEOUT
-              << "H) for class " << v_ClassName.at(iClass) << endl;
-    else if ( v_ReturnStatus.at(iClass) == -2  )
-      patFile << "# INCOMPLETE MINING !! NB PAT LIMIT REACHED (" << PARAM.NBPATLIMIT
-              << ") for class " << v_ClassName.at(iClass) << endl;
-  }
+  // for ( uint iClass = 0; iClass < v_ReturnStatus.size(); iClass++ )
+  // {
+  //   if ( v_ReturnStatus.at(iClass) == -1 || timeOutOverride )
+  //     patFile << "# INCOMPLETE MINING !! TIMEOUT REACHED (" << PARAM.TIMEOUT
+  //             << "H) for class " << v_ClassName.at(iClass) << endl;
+  //   else if ( v_ReturnStatus.at(iClass) == -2  )
+  //     patFile << "# INCOMPLETE MINING !! NB PAT LIMIT REACHED (" << PARAM.NBPATLIMIT
+  //             << ") for class " << v_ClassName.at(iClass) << endl;
+  // }
   patFile << "nb_total_pat," << vocabPattern->v_AllPatterns.size() << endl;
   patFile << "nb_total_closed_pat_class," << vocabPattern->v_AllPatterns.size() - nbTotalClosedPat << endl;
   patFile << "nb_pat_in_all_class," << nbPatternAllClass << endl;
-  for ( uint iClass = 0; iClass < v_NbPatternByClass.size(); iClass++ )
+  return ;
+  for ( int iClass = 1; iClass <= number_of_classes; iClass++ )
   {
     patFile << "nb_pat_class_" << v_ClassName.at(iClass)
             << "," << v_NbPatternByClass.at(iClass) << endl;
     patFile << "nb_closed_pat_class_" << v_ClassName.at(iClass)
             << "," << v_NbPatternByClass.at(iClass) - v_nbClosedPatClass.at(iClass) << endl;
     patFile << "prop_closed_pat_class_" << v_ClassName.at(iClass)
-            << "," << (double) v_nbClosedPatClass.at(iClass) / v_NbPatternByClass.at(iClass)  << endl;
+            << "," << (double) v_nbClosedPatClass.at(iClass) / max(1,v_NbPatternByClass.at(iClass))  << endl;
   }
   patFile << "canonical_time_sec,"   << (double)canonicalTick / CLOCKS_PER_SEC << endl;
   patFile << "subgraphiso_time_sec," << (double)subgraphisoTick / CLOCKS_PER_SEC << endl;
@@ -224,26 +236,26 @@ void MCTSGrima::saveData( bool timeOutOverride )
   patFile << "total_time_sec,"       << (double)totalTick / CLOCKS_PER_SEC << endl;
   patFile.close();
 
-  for ( uint iClass = 0; iClass < v_ReturnStatus.size(); iClass++ )
-  {
-    if ( v_ReturnStatus.at(iClass) == -1 || timeOutOverride )
-      patFile << "# INCOMPLETE MINING !! TIMEOUT REACHED (" << PARAM.TIMEOUT
-              << "H) for class " << v_ClassName.at(iClass) << endl;
-    else if ( v_ReturnStatus.at(iClass) == -2  )
-      patFile << "# INCOMPLETE MINING !! NB PAT LIMIT REACHED (" << PARAM.NBPATLIMIT
-              << ") for class " << v_ClassName.at(iClass) << endl;
-  }
+  // for ( uint iClass = 0; iClass < v_ReturnStatus.size(); iClass++ )
+  // {
+  //   if ( v_ReturnStatus.at(iClass) == -1 || timeOutOverride )
+  //     patFile << "# INCOMPLETE MINING !! TIMEOUT REACHED (" << PARAM.TIMEOUT
+  //             << "H) for class " << v_ClassName.at(iClass) << endl;
+  //   else if ( v_ReturnStatus.at(iClass) == -2  )
+  //     patFile << "# INCOMPLETE MINING !! NB PAT LIMIT REACHED (" << PARAM.NBPATLIMIT
+  //             << ") for class " << v_ClassName.at(iClass) << endl;
+  // }
   cout  << "nb_total_pat," << vocabPattern->v_AllPatterns.size() << endl;
   cout  << "nb_total_closed_pat_class," << vocabPattern->v_AllPatterns.size() - nbTotalClosedPat << endl;
   cout  << "nb_pat_in_all_class," << nbPatternAllClass << endl;
-  for ( uint iClass = 0; iClass < v_NbPatternByClass.size(); iClass++ )
+  for ( int iClass = 1; iClass <= number_of_classes; iClass++ )
   {
     cout  << "nb_pat_class_" << v_ClassName.at(iClass)
           << "," << v_NbPatternByClass.at(iClass) << endl;
     cout  << "nb_closed_pat_class_" << v_ClassName.at(iClass)
           << "," << v_NbPatternByClass.at(iClass) - v_nbClosedPatClass.at(iClass) << endl;
     cout  << "prop_closed_pat_class_" << v_ClassName.at(iClass)
-          << "," << (double) v_nbClosedPatClass.at(iClass) / v_NbPatternByClass.at(iClass)  << endl;
+          << "," << (double) v_nbClosedPatClass.at(iClass) / max(1,v_NbPatternByClass.at(iClass)) << endl;
   }
   cout  << "canonical_time_sec,"   << (double)canonicalTick / CLOCKS_PER_SEC << endl;
   cout  << "subgraphiso_time_sec," << (double)subgraphisoTick / CLOCKS_PER_SEC << endl;
@@ -251,11 +263,41 @@ void MCTSGrima::saveData( bool timeOutOverride )
   cout  << "mapping_extension_time_sec,"   << (double)mappingExtTick / CLOCKS_PER_SEC << endl;
   cout  << "total_time_sec,"       << (double)totalTick / CLOCKS_PER_SEC << endl;
   cout << endl;
+  cerr<<"end saving\n";
+}
+
+void MCTSGrima::unbuffer_class_patterns()
+{
+  set<Pattern_buffer>::iterator it = pattern_buffer_set.begin();
+  for( ; it != pattern_buffer_set.end() ; it++)
+  {
+    v_NbPatternByClass.at( current_class_id )++;
+    if ( it->is_closed )
+    {
+      nbClosedPat++;
+      nbTotalClosedPat++;
+    }
+    it->pat->pGraph->graphID = freqPatternId;
+    freqPatternId++;
+    v_PatternCurrClass.push_back(it->pat);
+    string tmp_string = it->pat->getCanonincalString();
+    unordered_map< string , bool >::iterator it1 =  all_patterns.find(tmp_string);
+    if( it1 == all_patterns.end() )
+    {
+      all_patterns[tmp_string] = 1;
+      vocabPattern->v_AllPatterns.push_back( it->pat );    
+    }
+    tmp_string.clear();
+    tmp_string.shrink_to_fit();
+  }
+  pattern_buffer_set.clear();
+
+  vocabPattern->v_PatternByClass.push_back( v_PatternCurrClass );
 }
 
 void print(GTokenData ob)
 {
-  for ( int i=0;i<ob.v_SparseOcc.size();++i)
+  for ( int i=0; i < int(ob.v_SparseOcc.size()) ; ++i)
   {
     
     if(!ob.v_SparseOcc.at(i).size())
@@ -310,8 +352,9 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
    * Copy Desc
    */
 
-  MCTS_node* root = new MCTS_node();
+  root = new MCTS_node();
   root->N_node = 1;
+  root->nodeID = nodes_counter++;
   
   map<GToken, GTokenData, GTokenGt>::iterator it = m_TokenData.begin();
   cerr<<"reach the initial loop, minfreq = "<<minFreq<<", edges mapsize = "<<m_TokenData.size()<<" \n";
@@ -319,7 +362,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
   while ( it != m_TokenData.end() )
   {
     // For all edges store in database
-    if ( it->second.freq >= minFreq )
+    if ( it->second.get_class_freq(current_class_id) >= int(minFreq) )
     {
       GExtensionData tmp;
       tmp.nbOcc     = 0;
@@ -337,11 +380,22 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
   cerr<<"reach the main loop, root map size "<<root->valid_extenstions.size()<<endl;
   int budget = PARAM.TIMEOUT;
   cerr<<"budget: "<<budget<<endl;
-  cerr<<"mining class number: "<<PARAM.current_class_id<<endl;
+  cerr<<"mining class number: "<<current_class_id<<endl;
   // the main loop
-  while(budget--)
+  while(true)
   {
-    
+    if(budget-- < 0)
+    {
+      cerr<<"Time budget has finished\n";
+      break;
+    }
+
+    // if(PARAM.NBPATLIMIT != -1 && number_of_mined_patterns > PARAM.NBPATLIMIT)
+    // {
+    //   cerr<<"Reached the limit in number of patterns\n";
+    //   break;
+    // }
+
     de = 0;
     delta = 0;
     N_delta = 0;
@@ -352,14 +406,16 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     
     if(selcted_node == NULL)
     {
+     // cerr<<"bad sel\n";
       // if the selection lead to a node which iss fully expanded or 
       //has to possible expansions, we should delete it
       // if this node is the root, then we a comnplete search has been done
       if(last_father->parents.size() == 0 || last_father == root)
       {
         cerr<<"root is dead, root children numer: "<< root->children_nodes->size() <<"\n";
-        print_report();
-        exit(0);
+        root = NULL;
+        //print_report();
+        return 0;
       }
 
       // update the ancestors with dleta = 0, and delete 
@@ -389,6 +445,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
       continue;
     }
 
+    //cerr<<"good sel\n";
     GToken ext;
     GExtensionData tmp_GExtensionData;
     // expand the node and save the edge that has been added
@@ -397,10 +454,11 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     // if the node has no expansions, mark it as fully expanded, it could be deleted next iteration
     if(exp_node == NULL)
     {
+      //cerr<<"bad expand\n";
       budget++;
       continue;
     }
-
+    //cerr<<"good expand\n";
     // build the pattern
     GPattern* currentPattern = new GPattern();
     currentPattern->pGraph->graphID   = freqPatternId;
@@ -425,25 +483,26 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     roll_depth = 0;
     do_update = true;
     delta = 0;
+    //cerr<<"start roll\n";
     // in the first level of the rollout, we compute the possible expansions of a pattern
-    int ret = roll_out( exp_node,
-                        selcted_node,
-                        true,
-                        v_Graphs,
-                        minF,
-                        currentPattern,
-                        ext,
-                        tmp_GTokenData,
-                        tmp_GExtensionData,
-                        firstExtensionData);
+    roll_out( exp_node,
+              selcted_node,
+              true,
+              v_Graphs,
+              minFreq,
+              currentPattern,
+              ext,
+              tmp_GTokenData,
+              tmp_GExtensionData,
+              firstExtensionData);
     
     
     // average reward
     delta = delta / max(1,N_delta);
 
     // debugging info
-    if(roll_depth > 100)
-      cerr<<"L: "<<roll_depth<<endl;
+    //if(roll_depth > 100)
+    //  cerr<<"L: "<<roll_depth<<endl;
 
     if(do_update)
     {
@@ -454,7 +513,8 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     {
       budget++;
     }
-    for(int i=0;i<tmp_GTokenData.v_SparseOcc.size();++i)
+    // memory cleaning
+    for(int i=0; i < int(tmp_GTokenData.v_SparseOcc.size()) ; ++i)
     {
       tmp_GTokenData.v_SparseOcc[i].clear();
     }
@@ -465,7 +525,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
 
   cerr<<"Budget has finished\n";
   // budget is finished
-  print_report();
+  //print_report();
   return 0;
 }
 
@@ -477,6 +537,8 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
 inline double MCTSGrima::UCB(MCTS_node* cur, MCTS_node* child)
 {
   //cerr<<"child->N_node: "<<child->N_node<<endl;
+  if(cur->Q < -1e9)
+    cerr<<"very low quality1\n";
   double ret = child->Q + 2*PARAM.C_p*sqrt(2*(log(cur->N_node))/child->N_node);
   if(ret < -10000)
     cerr<<"child->N_node: "<<child->N_node<<" cur->N_node: "<<cur->N_node<<endl;
@@ -585,7 +647,7 @@ MCTS_node* MCTSGrima::expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp){
     cur->valid_extenstions.shrink_to_fit();
   }
 
-  MCTS_node* new_child = new MCTS_node(cur,ext);
+  MCTS_node* new_child = new MCTS_node(cur,ext,nodes_counter++);
   //cerr<<"cereate node: "<<new_child<<endl;
   return new_child;
 }
@@ -594,7 +656,7 @@ double MCTSGrima::WRAcc(GTokenData& tokenData,int classID,int support)
 {
   double p_d = 0;
 
-  for( int i = 0 ; i < tokenData.v_SparseOcc.size() ; ++i)
+  for( int i = 0 ; i < int(tokenData.v_SparseOcc.size()) ; ++i)
   {
     if(tokenData.v_SparseOcc.at(i).pGraph->classID == classID 
         && tokenData.v_SparseOcc.at(i).size() > 0)
@@ -664,7 +726,7 @@ int MCTSGrima::roll_out(MCTS_node* cur,
                         GExtensionData  &suppData,   // Tmp variable, supposed frequency
                         GExtensionData  &prevData )
 {
- 
+  //cerr<<"here0\n";
   N_delta++;
   GGlobFreq nbOcc        = 0;
   // current frequency of P
@@ -677,14 +739,16 @@ int MCTSGrima::roll_out(MCTS_node* cur,
 
   // Add the extension to the pattern
   pPattern->push_back( lastExt, false );
-  
+  //cerr<<"here1\n";
   if(rollout_first_level)
   {
     firstTickTracker = clock();
     string canonical_code_string = pPattern->getCanonincalString();
     auto it = nodes_pointers.find(canonical_code_string);
+    //cerr<<"here2\n";
     if(it == nodes_pointers.end())
     {
+      //cerr<<"here3\n";
       //cerr<<"create new node "<<cur<<"\n";
       nodes_pointers[canonical_code_string] = cur;
       canonical_code_string.clear();
@@ -692,6 +756,7 @@ int MCTSGrima::roll_out(MCTS_node* cur,
     }
     else if (it->second == NULL)
     {
+      //cerr<<"here4\n";
       if(cur->children_nodes->size())
       { 
         cerr<<"cur pad delete, children number: "<<cur->children_nodes->size()<<"\n";
@@ -705,6 +770,7 @@ int MCTSGrima::roll_out(MCTS_node* cur,
     }
     else
     {
+      //cerr<<"here5\n";
       //fine the connection to current node
       auto tmp_it = parent->children_nodes->find(lastExt);
       // delete it
@@ -726,6 +792,7 @@ int MCTSGrima::roll_out(MCTS_node* cur,
     }
     canonicalTick += clock() - firstTickTracker;
   }
+  //cerr<<"here6\n";
   //cerr<<"de: "<<de<<endl;
   //if(de > 20)
   //  return 0;
@@ -733,7 +800,7 @@ int MCTSGrima::roll_out(MCTS_node* cur,
   //if(!cur->occ_list_is_computed)
   //{
   // Object with map of possible extensions
-  GExtensionCollect extCollect( minFreq );
+  GExtensionCollect extCollect( minFreq, current_class_id );
   // Object that store pattern and occurences
   GSubgraphIso subGraphIso( pPattern, pPattern->v_OccList );
   // Clear occurence list before searching new occurency as pPattern should
@@ -745,7 +812,7 @@ int MCTSGrima::roll_out(MCTS_node* cur,
   /// this is the most expensive part of the code!
   //cerr<<"-------\n";
 
-  bool del = 0;
+  //bool del = 0;
   int nbGraphSparse = tokenData.v_SparseOcc.size();
   for ( int iGraph = 0 ; iGraph < nbGraphSparse; iGraph++ )
   {
@@ -756,7 +823,7 @@ int MCTSGrima::roll_out(MCTS_node* cur,
     GSparseSet SparseOccTmp = tokenData.v_SparseOcc.at(iGraph);
     
     // Get domain size
-    for ( uint idx = 0; idx < SparseOccTmp.size() ; idx++ )
+    for ( uint idx = 0; idx < uint(SparseOccTmp.size()) ; idx++ )
     {
       
       GSparseSet::mapEdge mEdge = SparseOccTmp.at(idx);
@@ -805,6 +872,7 @@ int MCTSGrima::roll_out(MCTS_node* cur,
           currentFreq++;
         // Compute all extension of this occurence
         firstTickTracker = clock();
+        subGraphIso.current_occurrence_class_id = SparseOccTmp.pGraph->classID;
         extCollect.process( subGraphIso );
         extensionTick += clock() - firstTickTracker;
         my_last = iGraph;
@@ -815,7 +883,7 @@ int MCTSGrima::roll_out(MCTS_node* cur,
         tokenData.v_SparseOcc.at(iGraph).remove(mEdge) ;
         //if(!(de%100))
        // cerr<<"*";
-        del = 1;
+        //del = 1;
       }
     }
 
@@ -824,7 +892,7 @@ int MCTSGrima::roll_out(MCTS_node* cur,
   }
  
 
-  for ( int iGraph = 0 ; iGraph < tokenData.v_SparseOcc.size() ; iGraph++ )
+  for ( int iGraph = 0 ; iGraph < int(tokenData.v_SparseOcc.size()) ; iGraph++ )
   {
     if (tokenData.v_SparseOcc[iGraph].size() == 0)
     {
@@ -835,7 +903,7 @@ int MCTSGrima::roll_out(MCTS_node* cur,
   }
 
   tokenData.v_SparseOcc.shrink_to_fit();
-
+  //cerr<<"here7\n";
   //if(del)
   //  cerr<<"\n";
   if(rollout_first_level)
@@ -889,57 +957,60 @@ int MCTSGrima::roll_out(MCTS_node* cur,
   }
   
   /*************************************************************************/
-  if(false)
+  
+  double cur_Q = WRAcc(tokenData,current_class_id,currentFreq);
+  delta += cur_Q;
+  //cerr<<"here8\n";
+  // save hthe pattern
+  //cerr<<"start add, nplimit: "<<PARAM.NBPATLIMIT<<"\n";
+  bool add_pattern = false;
+  if( int(pattern_buffer_set.size()) < PARAM.NBPATLIMIT  )
   {
-    // === Fourth step : Output pattern and occurences in output file
-    // Increment pattern Id
-    uint countPat = 0;
-    bool find     = false;
-    while ( countPat < vocabPattern->v_AllPatterns.size() && !find )
-    {
-      find = vocabPattern->comp( pPattern, vocabPattern->v_AllPatterns[countPat] );
-      if ( !find )
-        countPat++;
-    }
-
-    //GPattern * tmpPat = new GPattern( *pPattern );
-    //tmpPat->pGraph = new GGraph( *pPattern->pGraph );
-
-    if ( !find )
-    {
-      //v_NbPatternByClass.at( currClassIdx )++;
-
-      if ( prevData.frequency == suppData.frequency
-          && prevData.nbOcc == suppData.nbOcc )
-      {
-        nbClosedPat++;
-        nbTotalClosedPat++;
-      }
-      pPattern->pGraph->graphID = freqPatternId;
-      freqPatternId++;
-      //vocabPattern->v_AllPatterns.push_back( tmpPat );
-    }
-    //v_PatternCurrClass.push_back(tmpPat);
-
-    if ( PARAM.DEBUG_MODE )
-    {
-      // Write pattern in output file
-      cout << "# Suppose freq : " << suppData.frequency << endl;
-      cout << "# Suppose occ  : " << suppData.nbOcc     << endl;
-      cout << "p " << freqPatternId << endl;
-      cout << pPattern->v_Tokens << endl;
-    }
+    add_pattern = true;
+  }
+  else if(pattern_buffer_set.begin()->evaluation < cur_Q)
+  {
+    add_pattern = true;
   }
 
+  if(add_pattern)
+  {
+    string tmp_string = pPattern->getCanonincalString();
+    unordered_map< string , bool >::iterator it = class_patterns.find(tmp_string);
+    if(it == class_patterns.end())
+    {
+      class_patterns[tmp_string] = 1;
+
+      //not found
+      GPattern * tmpPat = new GPattern( pPattern );
+      bool is_closed = prevData.frequency == suppData.frequency 
+                        && prevData.nbOcc == suppData.nbOcc ;
+
+      pattern_buffer_set.insert( Pattern_buffer(tmpPat,is_closed,cur_Q) );
+      
+      if( int(pattern_buffer_set.size()) > PARAM.NBPATLIMIT )
+      {
+        tmpPat = pattern_buffer_set.begin()->pat;
+        pattern_buffer_set.erase(pattern_buffer_set.begin());
+        delete tmpPat;
+      }
+
+    }
+
+    tmp_string.clear();
+    tmp_string.shrink_to_fit();
+  }
+  //cerr<<"end add\n";
+  //cerr<<"here13\n";
   /********************* store the possible expansions ********************/
   vector<pair<GToken, GExtensionData> > tmp_vec;
 
   for ( map<GToken, GExtensionData, GTokenGt>::iterator it= extCollect.m_Extensions.begin();
         it != extCollect.m_Extensions.end(); it++ )
   {
-    if ( it->second.frequency >= minFreq )
+    if ( it->second.current_class_frequency >= int(minFreq) )
     {
-      // save thje possible moves on the mape
+      // save the possible moves on the mape
       if ( it->first.angle != GNOANGLE )
       {
         tmp_vec.push_back(make_pair(it->first,it->second));
@@ -954,8 +1025,6 @@ int MCTSGrima::roll_out(MCTS_node* cur,
   // we shuffle to make the chose of the action in the simulation random. Good?
   random_shuffle ( tmp_vec.begin(), tmp_vec.end() );
   
-  
-
   if(rollout_first_level)
   {
     cur->valid_extenstions = tmp_vec;
@@ -973,7 +1042,7 @@ int MCTSGrima::roll_out(MCTS_node* cur,
   {
     cerr<<pPattern;
     cerr<<"possible expansions:\n";
-    for(int i=0;i< tmp_vec.size();++i)
+    for(int i=0; i < int(tmp_vec.size()) ; ++i )
       cerr<<tmp_vec[i].first;
     cerr<<"--------------------\n";
     print(tokenData);
@@ -998,20 +1067,6 @@ int MCTSGrima::roll_out(MCTS_node* cur,
     return 0;
     //wot?
   }
-
-  
-
-  // get the maximum WRAcc accourding to different classes
-  double cur_Q;
-  // classes are 1-indexed
-  //for(int i = 1; i <= number_of_classes;  ++i)
-  //  cur_Q = max( cur_Q , WRAcc(tokenData,i,currentFreq) ); 
-
-  cur_Q = WRAcc(tokenData,current_class_id,currentFreq);
-
-  if(cur_Q < -1000000 || cur_Q > 1000000)
-    cerr<<"cur_Q: "<<cur_Q<<endl;
-  delta += cur_Q;
 
   ++de;
 
@@ -1042,6 +1097,8 @@ void MCTSGrima::update_ancestors(MCTS_node* cur, double delta)
     return;
   
   cur->Q = (cur->N_node*cur->Q+delta)/max(1,cur->N_node+1);
+  if(cur->Q < -1e9)
+    cerr<<"very low quality2\n";
   cur->N_node = cur->N_node+1;
   
   if (cur->parents.size() == 0)
@@ -1094,7 +1151,7 @@ void MCTSGrima::delete_tree_node(MCTS_node* cur)
     {
       if(it->second->parents[i] == cur)
       {
-        cerr<<"DELDEL\n";
+        //cerr<<"DELDEL\n";
         it->second->parents[i] = it->second->parents.back();
         it->second->parents.pop_back();
       }
@@ -1104,6 +1161,55 @@ void MCTSGrima::delete_tree_node(MCTS_node* cur)
   
   // delete node
   delete cur;
-  //cerr<<"end deleting\n";
+  //cerr<<"end deleting\n";  
+}
+
+void MCTSGrima::clean()
+{
+  //cerr<<"here00\n";
+  unordered_map< string , MCTS_node* >::iterator it = nodes_pointers.begin();
+  //cerr<<"here0\n";
+  for(it = nodes_pointers.begin();
+      it != nodes_pointers.end(); it++)
+  {
+    if(it->second != NULL)
+    {
+      delete_tree_node (it->second);
+    }
+  }
+  //cerr<<"here1\n";
+  //dont clear this!
+  //all_patterns.clear()
   
+  class_patterns.clear();
+  nodes_pointers.clear();
+  pattern_buffer_set.clear();
+  //cerr<<"here2\n";
+  return;
+  // //cerr<<"start clean\n";
+  // search_tree_nodes.clear();
+  // if(root != NULL)
+  //   delete_search_subtree(root);
+  
+  // map<long long, MCTS_node*>::iterator it;
+  // for(it = search_tree_nodes.begin();
+  //     it != search_tree_nodes.end(); it++)
+  //   delete_tree_node (it->second);
+  // search_tree_nodes.clear();
+  // //cerr<<"end clean\n";
+}
+
+void MCTSGrima::delete_search_subtree(MCTS_node* cur)
+{
+
+  map< GToken ,MCTS_node*, GTokenGt>::iterator it;
+
+  for(it = cur->children_nodes->begin();
+      it != cur->children_nodes->end() ;it++)
+  {
+    delete_search_subtree(it->second);
+  }
+
+  search_tree_nodes[cur->nodeID] = cur;
+
 }

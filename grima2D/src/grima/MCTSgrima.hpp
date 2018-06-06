@@ -41,13 +41,62 @@
 #include "gextensioncollect.hpp"
 #include "gsubgraphiso.hpp"
 #include "gvocab.hpp"
-
 #include "MCTS.hpp"
+#include <set>
 
 #include <unordered_map>
 
 //=============================== NAMESPACE ==================================//
-//============================ STRUCT & TYPEDEF ==============================//
+//============================ STRUCT & TYP-EDEF ==============================//
+
+
+
+struct Pattern_buffer
+{
+  GPattern* pat;
+  bool is_closed;
+  double evaluation;
+
+  Pattern_buffer()
+  {
+    pat = NULL, is_closed = 1, evaluation = 0.0;
+  }
+
+  Pattern_buffer(GPattern* p, bool closed, double ev)
+  {
+    pat = p, is_closed = closed, evaluation = ev;
+  }
+
+  bool operator < ( const Pattern_buffer& ob) const
+  {
+    if( evaluation != ob.evaluation )
+      return evaluation < ob.evaluation;
+    else if(is_closed != ob.is_closed)
+      return is_closed < ob.is_closed;
+    
+    uint minSize = min( pat->v_Tokens.size(), ob.pat->v_Tokens.size() );
+    uint i = 0;
+    int cmp = 0;
+
+    while ( i < minSize )
+    {
+      cmp = cmpGTokenCanonTest( pat->v_Tokens.at(i), ob.pat->v_Tokens.at(i) );
+      if ( cmp > 0 )
+        return true;
+      else if ( cmp < 0 )
+        return false;
+      else
+        i++;
+    }
+    if ( pat->v_Tokens.size() > ob.pat->v_Tokens.size() )
+      return true;
+    else
+      return false;
+
+  }
+
+};
+
 //=============================== VARIABLES ==================================//
 //================================ METHODS ===================================//
 
@@ -101,6 +150,14 @@ public:
 
   unordered_map< string , MCTS_node* > nodes_pointers;
 
+  unordered_map< string , bool > class_patterns;
+
+  unordered_map< string , bool > all_patterns;
+  
+  set<Pattern_buffer> pattern_buffer_set;
+
+  map<long long, MCTS_node*> search_tree_nodes;
+
   double delta;
   int N_delta;
 
@@ -116,6 +173,10 @@ public:
   bool do_update;
 
   int current_class_id;
+
+  MCTS_node* root;
+
+  long long nodes_counter;
   // Public Structure & Typedef ______________________________________________//
   // Public Constructor/Desctructor __________________________________________//
   /**
@@ -139,7 +200,7 @@ public:
   /**
    * TODO
    */
-  void initNbPatternByClass(vector<GClassDB *> v_GClassDB );
+  void initNbPatternByClass( );
 
   /**
    * @brief processMining
@@ -157,8 +218,9 @@ public:
    * @param filename
    * @param returnStatus
    */
-  void saveData(bool timeOutOverride );
+  void saveData( );
 
+  void unbuffer_class_patterns();
 
   inline double UCB(MCTS_node* cur, MCTS_node* child);
 
@@ -189,6 +251,10 @@ public:
   double WRAcc(GTokenData& tokenData,int classID,int support); 
 
   void delete_tree_node(MCTS_node* cur);
+
+  void clean();
+
+  void delete_search_subtree(MCTS_node* cur);
   //---- PROTECTED  ----------------------------------------------------------//
 protected:
   // Protected CONSTANTS _____________________________________________________//

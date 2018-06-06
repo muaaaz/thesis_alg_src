@@ -147,3 +147,9 @@ todo
 
 # Grids input file "big files"
 *.gri
+
+dif.dif
+
+*.json
+
+output/

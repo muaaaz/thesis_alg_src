@@ -145,7 +145,7 @@ void GSparseSet::remove( uint i )
    * TODO : RD
    * Copy Desc
    */
-  if(i < size())
+  if(i < uint(size()) )
   {
     swap( i, size()-1 );
     data.pop_back();
@@ -169,7 +169,7 @@ int GSparseSet::find( mapEdge e )
   if ( size() == 0 )
     return -1;
   else
-    for ( uint i=0 ; i < size(); ++i )
+    for ( uint i=0 ; i < uint(size()); ++i )
       if ( data[i].nodeDest == e.nodeDest && data[i].nodeFrom == e.nodeFrom )
         return i;
   // If not find, return -1

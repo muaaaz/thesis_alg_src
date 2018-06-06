@@ -637,7 +637,7 @@ string GPattern::getCanonincalString()
   GPattern* tmpPat = computer.getCanonincal();
   vector<GToken>& vec = tmpPat->v_Tokens;
   string ret = "";
-  for(int i = 0 ; i<vec.size() ; ++i)
+  for(int i = 0 ; i < int(vec.size()) ; ++i)
     ret += token_to_string(vec[i]);
   delete tmpPat;
   return ret;

@@ -143,12 +143,24 @@ struct GTokenData {
   int size()
   {
     int ret = 0;
-    for ( int i=0;i<v_SparseOcc.size();++i)
+    for ( int i=0; i < int(v_SparseOcc.size()) ;++i)
       ret += v_SparseOcc[i].data.size();
     
     return ret;
   }
   uint               freq;
+  int get_class_freq(int ID)
+  {
+    int ret = 0;
+    for(auto it : v_SparseOcc)
+    {
+      if( it.data.size() > 0 && it.pGraph->classID == ID )
+        ret++;
+    }
+
+    return ret;
+  }
+
 };
 
 struct D_GTokenData {
@@ -168,7 +180,7 @@ struct GClassDB {
   vector<GGraph*> v_ClassGraphs;
   /// List of all 1-edge canonical DFS code occure
   map<GToken,GTokenData,GTokenGt> m_TokenData;
-
+  
   int number_of_classes;
   int number_of_graphs;
   vector<int> class_count;
@@ -209,7 +221,7 @@ public:
   // Public Variables_________________________________________________________//
   /// Vector of GClassDB object, ie each class with their graph
   vector<GClassDB*> v_GClassDB;
-
+  vector<string> v_ClassName;
 
   // Public Constructor/Desctructor __________________________________________//
   /// Default constructor

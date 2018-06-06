@@ -658,7 +658,7 @@ GPattern* GCanonicalDFSComputer::getCanonincal()
     //cerr<<"labels: "<<tmpEdge.nodeI<<' '<<tmpEdge.nodeJ<<endl;
     //cerr<<"ids: "<<pPattern->v_Tokens[i].nodeFrom<<' '<<pPattern->v_Tokens[i].nodeDest<<endl;
     if ( pPattern->v_Tokens.at(0).angle < 0
-         && i != smallest_edge_idx
+         && i != uint(smallest_edge_idx)
          &&  ( ( tmpEdge.nodeI > smallestEdge.nodeI || tmpEdge.nodeJ > smallestEdge.nodeI )
                || ( tmpEdge.nodeI >= smallestEdge.nodeI && tmpEdge.nodeJ > smallestEdge.nodeJ )
                || ( tmpEdge.nodeJ >= smallestEdge.nodeI && tmpEdge.nodeI > smallestEdge.nodeJ ) ) )
@@ -678,7 +678,7 @@ GPattern* GCanonicalDFSComputer::getCanonincal()
     else
     {
       if ( ( pPattern->v_Tokens.at(0).angle >= 0 &&  pPattern->v_Tokens.at(i).angle >= 0 )
-           && i != smallest_edge_idx
+           && i != uint(smallest_edge_idx)
            && ( mx_tmp > mx_sml || ( mx_tmp == mx_sml && mn_tmp > mn_sml ) )
          )
       {
@@ -802,7 +802,7 @@ GPattern* GCanonicalDFSComputer::getCanonincal()
   
   
 
-  for(int i=0 ; i<v_firstEdges.size() ; i++)
+  for(int i=0 ; i < int(v_firstEdges.size()) ; i++)
   {
     if(v_firstEdges[i].codeToken.nodeLabelFrom < v_firstEdges[i].codeToken.nodeLabelDest)
     {
@@ -868,7 +868,7 @@ GPattern* GCanonicalDFSComputer::getCanonincal()
   }
   sort(pats.begin(),pats.end(),GpatComptLt());
   GPattern* ret = new GPattern(pats[0]);
-   for(int i=0;i<pats.size();++i)
+   for(int i=0 ; i < int(pats.size()) ; ++i)
     delete pats[i];
   
   // cerr<<"sorted patterns\n";

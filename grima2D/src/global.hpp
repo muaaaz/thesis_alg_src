@@ -116,7 +116,7 @@ struct param {
     MAXLBL(-1),
     TEMP_FIRST(false),
     SPAT_FIRST(true),
-    C_p(0.5)
+    C_p(1/sqrt(2))
 
   {
     // Nothing to put here

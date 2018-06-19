@@ -57,6 +57,7 @@ int de_arr[10000];
 int sel_arr[10000];
 
 int de = 0;
+int roll_depth = 0;
 //================================= CLASS ====================================//
 //---- PUBLIC ----------------------------------------------------------------//
 // Public CONSTANTS __________________________________________________________//
@@ -384,7 +385,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
   // the main loop
   while(true)
   {
-    if(budget-- < 0)
+    if( (clock() - firstTick ) / CLOCKS_PER_SEC >= (round( PARAM.TIMEOUT*60 / number_of_classes ) ) )
     {
       cerr<<"Time budget has finished\n";
       break;
@@ -396,7 +397,8 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     //   break;
     // }
 
-    de = 0;
+    roll_depth = de = 0;
+    
     delta = 0;
     N_delta = 0;
 
@@ -438,6 +440,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
       if(last_father->children_nodes->size())
       { 
         cerr<<"pad delete, children number: "<<last_father->children_nodes->size()<<"\n";
+        exit(1);
       }
       delete_tree_node(last_father);
       delete currentPattern;
@@ -539,7 +542,7 @@ inline double MCTSGrima::UCB(MCTS_node* cur, MCTS_node* child)
   //cerr<<"child->N_node: "<<child->N_node<<endl;
   if(cur->Q < -1e9)
     cerr<<"very low quality1\n";
-  double ret = child->Q + 2*PARAM.C_p*sqrt(2*(log(cur->N_node))/child->N_node);
+  double ret = child->Q + 2 * PARAM.C_p * sqrt( 2 * log(double(cur->N_node)) / double(child->N_node)  );
   if(ret < -10000)
     cerr<<"child->N_node: "<<child->N_node<<" cur->N_node: "<<cur->N_node<<endl;
   return ret;// logaritem base??
@@ -626,7 +629,8 @@ MCTS_node* MCTSGrima::select(MCTS_node* cur)
 
 // we we want to expand a node we expect that teh node has it valid_extenstions ready but not all the children_nodes
 
-MCTS_node* MCTSGrima::expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp){
+MCTS_node* MCTSGrima::expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp)
+{
   
   if(cur->valid_extenstions.size() == 0){
     cur->is_fully_expanded = true;
@@ -654,6 +658,8 @@ MCTS_node* MCTSGrima::expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp){
 
 double MCTSGrima::WRAcc(GTokenData& tokenData,int classID,int support)
 {
+  //return double(rand()%100) / double(100);
+
   double p_d = 0;
 
   for( int i = 0 ; i < int(tokenData.v_SparseOcc.size()) ; ++i)
@@ -670,14 +676,10 @@ double MCTSGrima::WRAcc(GTokenData& tokenData,int classID,int support)
   double p = class_count[classID] / number_of_graphs;
 
   double ret = ( support * (p_d - p) ) / number_of_graphs;
+  //double ret = p_d - p;
 
-  if(ret < -1e80)
-  {
-    cerr<<"bad WRAcc\n";
-    cerr<<"p_d: "<<p_d<<"\np: "<<p<<"\n number_of_graphs: "
-    <<number_of_graphs<<"\n support: "<<support
-    <<"\n class_count[classID]: "<<class_count[classID]<<endl;
-  }
+  //double ret = log( 2 + double(support) / double(number_of_graphs) ) * (p_d - p)   ;
+  
   return ret;
   
 }
@@ -1062,12 +1064,13 @@ int MCTSGrima::roll_out(MCTS_node* cur,
   {
     //cerr<<"No valid expantions!\n";
     pPattern->pop_back( false );
-    ++de_arr[de];
+    ++de_arr[roll_depth];
+    roll_depth--;
     de--;
     return 0;
     //wot?
   }
-
+  ++roll_depth;
   ++de;
 
   // chose the last element
@@ -1087,16 +1090,16 @@ int MCTSGrima::roll_out(MCTS_node* cur,
                 suppData);
   
   de--;
-
+  roll_depth--;
   return ret;
 }
 
-void MCTSGrima::update_ancestors(MCTS_node* cur, double delta)
+void MCTSGrima::update_ancestors(MCTS_node* cur, double _delta)
 { 
   if(cur == NULL )
     return;
   
-  cur->Q = (cur->N_node*cur->Q+delta)/max(1,cur->N_node+1);
+  cur->Q = (cur->N_node*cur->Q+_delta)/max(1,cur->N_node+1);
   if(cur->Q < -1e9)
     cerr<<"very low quality2\n";
   cur->N_node = cur->N_node+1;
@@ -1108,7 +1111,7 @@ void MCTSGrima::update_ancestors(MCTS_node* cur, double delta)
   }
   for(auto it : cur->parents)
   {
-    update_ancestors(it,delta);
+    update_ancestors(it,_delta);
   }
 }
 
@@ -1147,7 +1150,7 @@ void MCTSGrima::delete_tree_node(MCTS_node* cur)
     it != cur->children_nodes->end() ; 
     it++ )
   {
-    for(int i=0; i < it->second->parents.size() ; i++)
+    for(int i=0; i < int(it->second->parents.size()) ; i++)
     {
       if(it->second->parents[i] == cur)
       {

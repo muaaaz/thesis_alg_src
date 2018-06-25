@@ -26,8 +26,8 @@
  ***************************************************************************/
 
 //================================= IFDEF ====================================//
-#ifndef MCTSGRIMA_HPP
-#define MCTSGRIMA_HPP
+#ifndef HOLOGRAM_HPP
+#define HOLOGRAM_HPP
 
 //================================ INCLUDE ===================================//
 // Include library class
@@ -41,9 +41,8 @@
 #include "gextensioncollect.hpp"
 #include "gsubgraphiso.hpp"
 #include "gvocab.hpp"
-#include "MCTS.hpp"
+#include "searchtreenode.hpp"
 #include <set>
-
 #include <unordered_map>
 
 //=============================== NAMESPACE ==================================//
@@ -106,7 +105,7 @@ struct Pattern_buffer
  * Class that store vocabulary of pattern and allow to process grima mining
  * algorithm for each class.
  */
-class MCTSGrima
+class Hologram
 {
   //---- PUBLIC --------------------------------------------------------------//
 public:
@@ -148,7 +147,7 @@ public:
   float minF;
   GClassDB* pClassDB;
 
-  unordered_map< string , MCTS_node* > nodes_pointers;
+  unordered_map< string , searchtreenode* > nodes_pointers;
 
   unordered_map< string , bool > class_patterns;
 
@@ -156,7 +155,7 @@ public:
   
   set<Pattern_buffer> pattern_buffer_set;
 
-  map<long long, MCTS_node*> search_tree_nodes;
+  map<long long, searchtreenode*> search_tree_nodes;
 
   double delta;
   int N_delta;
@@ -166,7 +165,7 @@ public:
   int number_of_classes;
   int number_of_graphs;
 
-  MCTS_node* last_father;
+  searchtreenode* last_father;
 
   int roll_depth;
 
@@ -174,7 +173,7 @@ public:
 
   int current_class_id;
 
-  MCTS_node* root;
+  searchtreenode* root;
 
   long long nodes_counter;
   // Public Structure & Typedef ______________________________________________//
@@ -184,15 +183,15 @@ public:
    * Default constructor
    * Initialize variables and create new GVocab object
    */
-  MCTSGrima();
+  Hologram();
 
-  MCTSGrima(float _minf,GClassDB* _pClassDB,int class_id);
+  Hologram(float _minf,GClassDB* _pClassDB,vector<string> classes_names);
   /**
    * @brief ~G
    * Default Destructor
    * Free memory by deleting GVocab object and clearing vectors
    */
-  ~MCTSGrima();
+  ~Hologram();
 
   // Accessor ________________________________________________________________//
   // Mutator _________________________________________________________________//
@@ -200,7 +199,9 @@ public:
   /**
    * TODO
    */
-  void initNbPatternByClass( );
+  void set_class_id(int id);
+
+  void initialize( );
 
   /**
    * @brief processMining
@@ -222,21 +223,20 @@ public:
 
   void unbuffer_class_patterns();
 
-  inline double UCB(MCTS_node* cur, MCTS_node* child);
+  inline double UCB(searchtreenode* cur, searchtreenode* child);
 
-  MCTS_node* best_child(MCTS_node* cur,GToken& ext);
+  searchtreenode* best_child(searchtreenode* cur,GToken& ext);
 
-  //MCTS_node* select(MCTS_node* cur, GPattern* pPattern); 
-  MCTS_node* select(MCTS_node* cur);
+  searchtreenode* select(searchtreenode* cur);
 
-  MCTS_node* expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp);
+  searchtreenode* expand(searchtreenode* cur,GToken& ext,GExtensionData& tmp);
 
-  void add_parent(MCTS_node* cur,MCTS_node* parent,const GToken& lastExt);
+  void add_parent(searchtreenode* cur,searchtreenode* parent,const GToken& lastExt);
 
-  void build_pattern(MCTS_node* selcted_node, GPattern* pPattern);
+  void build_pattern(searchtreenode* selcted_node, GPattern* pPattern);
 
-  int roll_out( MCTS_node* cur, 
-                MCTS_node* parent,
+  int roll_out( searchtreenode* cur, 
+                searchtreenode* parent,
                 bool rollout_first_level,
                 const vector<GGraph*>& v_Graphs,
                 const GGlobFreq       minFreq,    //Mininmum global frequency
@@ -246,15 +246,15 @@ public:
                 GExtensionData  &suppData,   // Tmp variable, supposed frequency
                 GExtensionData  &prevData);
 
-  void update_ancestors(MCTS_node* cur, double delta); 
+  void update_ancestors(searchtreenode* cur, double delta); 
 
   double WRAcc(GTokenData& tokenData,int classID,int support); 
 
-  void delete_tree_node(MCTS_node* cur);
+  void delete_tree_node(searchtreenode* cur);
 
   void clean();
 
-  void delete_search_subtree(MCTS_node* cur);
+  void delete_search_subtree(searchtreenode* cur);
   //---- PROTECTED  ----------------------------------------------------------//
 protected:
   // Protected CONSTANTS _____________________________________________________//
@@ -281,4 +281,4 @@ private:
 
 //============================== OPERATOR OVERLOAD  ==========================//
 //================================= END IFDEF ================================//
-#endif // MCTSGRIMA_HPP
+#endif // HOLOGRAM_HPP

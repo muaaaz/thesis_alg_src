@@ -37,9 +37,9 @@
 #include <algorithm>
 #include <stack>
 // Include project class
-#include "MCTSgrima.hpp"
+#include "hologram.hpp"
 #include "global.hpp"
-#include "MCTS.hpp"
+#include "searchtreenode.hpp"
 
 //=============================== NAMESPACE ==================================//
 using namespace std;
@@ -62,7 +62,7 @@ int roll_depth = 0;
 //---- PUBLIC ----------------------------------------------------------------//
 // Public CONSTANTS __________________________________________________________//
 // Public Constructor/Desctructor ____________________________________________//
-MCTSGrima::MCTSGrima():
+Hologram::Hologram():
   nbPatternAllClass(0),
   nbClosedPat(0),
   nbTotalClosedPat(0),
@@ -86,7 +86,7 @@ MCTSGrima::MCTSGrima():
   v_nbClosedPatClass.clear();
 }
 
-MCTSGrima::MCTSGrima(float _minf, GClassDB* _pClassDB,int class_id):
+Hologram::Hologram(float _minf, GClassDB* _pClassDB,vector<string> classes_names):
   nbPatternAllClass(0),
   nbClosedPat(0),
   nbTotalClosedPat(0),
@@ -96,7 +96,8 @@ MCTSGrima::MCTSGrima(float _minf, GClassDB* _pClassDB,int class_id):
   canonicalTick(0),
   extensionTick(0),
   subgraphisoTick(0),
-  current_class_id(class_id)
+  current_class_id(1),
+  v_ClassName(classes_names)
 {
   /*
    * TODO : RD
@@ -110,7 +111,7 @@ MCTSGrima::MCTSGrima(float _minf, GClassDB* _pClassDB,int class_id):
   v_ClassName.clear();
   v_nbClosedPatClass.clear();
 }
-MCTSGrima::~MCTSGrima()
+Hologram::~Hologram()
 {
   /*
    * TODO : RD
@@ -125,7 +126,12 @@ MCTSGrima::~MCTSGrima()
 // Accessor __________________________________________________________________//
 // Mutator ___________________________________________________________________//
 // Public Methods ____________________________________________________________//
-void MCTSGrima::initNbPatternByClass( )
+void Hologram::set_class_id(int id)
+{
+  current_class_id = id;
+}
+
+void Hologram::initialize( )
 {
   number_of_classes =  pClassDB->number_of_classes;
   number_of_graphs =  pClassDB->number_of_graphs;
@@ -136,7 +142,7 @@ void MCTSGrima::initNbPatternByClass( )
   //for ( uint iClass = 0; iClass < v_GClassDB.size(); iClass++ )
   //  v_ClassName.push_back( v_GClassDB.at(iClass)->className );
 }
-// End of Grima::initNbPatternByClass( int nbClass )
+// End of Grima::initialize( int nbClass )
 
 //===========================================================================//
 //                                   MAIN                                    //
@@ -148,7 +154,7 @@ void print(vector<int> vec)
   cout<<endl;
 }
 
-int MCTSGrima::processMining( )
+int Hologram::processMining( )
 {
   /*
    * TODO : RD
@@ -204,7 +210,7 @@ int MCTSGrima::processMining( )
 }
 // End of Grima::processMining( double minF , GClassDB *pClassDB )
 
-void MCTSGrima::saveData( )
+void Hologram::saveData( )
 {
   vocabPattern->saveVocab( PARAM.OUTDIR + PARAM.PATFILE, v_ClassName, v_ReturnStatus );
   ofstream patFile;
@@ -267,7 +273,7 @@ void MCTSGrima::saveData( )
   cerr<<"end saving\n";
 }
 
-void MCTSGrima::unbuffer_class_patterns()
+void Hologram::unbuffer_class_patterns()
 {
   set<Pattern_buffer>::iterator it = pattern_buffer_set.begin();
   for( ; it != pattern_buffer_set.end() ; it++)
@@ -344,7 +350,7 @@ void print_report()
   cerr<<endl;
 }
 
-int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
+int Hologram::search( vector<GGraph*>                   &v_Graphs,
                    map<GToken, GTokenData, GTokenGt> &m_TokenData,
                    GGlobFreq                         minFreq )
 {
@@ -353,7 +359,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
    * Copy Desc
    */
 
-  root = new MCTS_node();
+  root = new searchtreenode();
   root->N_node = 1;
   root->nodeID = nodes_counter++;
   
@@ -404,7 +410,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
 
     // the father of the selected node:
     last_father = NULL;
-    MCTS_node* selcted_node = select(root);
+    searchtreenode* selcted_node = select(root);
     
     if(selcted_node == NULL)
     {
@@ -452,7 +458,7 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
     GToken ext;
     GExtensionData tmp_GExtensionData;
     // expand the node and save the edge that has been added
-    MCTS_node* exp_node = expand(selcted_node,ext,tmp_GExtensionData);
+    searchtreenode* exp_node = expand(selcted_node,ext,tmp_GExtensionData);
     
     // if the node has no expansions, mark it as fully expanded, it could be deleted next iteration
     if(exp_node == NULL)
@@ -537,27 +543,24 @@ int MCTSGrima::search( vector<GGraph*>                   &v_Graphs,
 //                       GGlobFreq                         minFreq )
 
 
-inline double MCTSGrima::UCB(MCTS_node* cur, MCTS_node* child)
+inline double Hologram::UCB(searchtreenode* cur, searchtreenode* child)
 {
   //cerr<<"child->N_node: "<<child->N_node<<endl;
-  if(cur->Q < -1e9)
-    cerr<<"very low quality1\n";
+  //return double(rand()%100) / double(100);
   double ret = child->Q + 2 * PARAM.C_p * sqrt( 2 * log(double(cur->N_node)) / double(child->N_node)  );
-  if(ret < -10000)
-    cerr<<"child->N_node: "<<child->N_node<<" cur->N_node: "<<cur->N_node<<endl;
   return ret;// logaritem base??
 }
 
-MCTS_node* MCTSGrima::best_child(MCTS_node* cur,GToken& ext)
+searchtreenode* Hologram::best_child(searchtreenode* cur,GToken& ext)
 {
 
     //this function will return the a pointer to the best child of the current MCTS node
-    map< GToken ,MCTS_node*, GTokenGt>::iterator it;
+    map< GToken ,searchtreenode*, GTokenGt>::iterator it;
     it = cur->children_nodes->begin();
 
     double cur_UCB = UCB(cur,it->second);
     double mx_UCB = cur_UCB;
-    MCTS_node* ret = it->second;
+    searchtreenode* ret = it->second;
     ext = it->first;
     
     it++;
@@ -580,7 +583,7 @@ MCTS_node* MCTSGrima::best_child(MCTS_node* cur,GToken& ext)
     return ret;
 }
 
-MCTS_node* MCTSGrima::select(MCTS_node* cur)
+searchtreenode* Hologram::select(searchtreenode* cur)
 {
   int mx_depth = int(1e6);
   int cc = 1;
@@ -629,7 +632,7 @@ MCTS_node* MCTSGrima::select(MCTS_node* cur)
 
 // we we want to expand a node we expect that teh node has it valid_extenstions ready but not all the children_nodes
 
-MCTS_node* MCTSGrima::expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp)
+searchtreenode* Hologram::expand(searchtreenode* cur,GToken& ext,GExtensionData& tmp)
 {
   
   if(cur->valid_extenstions.size() == 0){
@@ -651,12 +654,12 @@ MCTS_node* MCTSGrima::expand(MCTS_node* cur,GToken& ext,GExtensionData& tmp)
     cur->valid_extenstions.shrink_to_fit();
   }
 
-  MCTS_node* new_child = new MCTS_node(cur,ext,nodes_counter++);
+  searchtreenode* new_child = new searchtreenode(cur,ext,nodes_counter++);
   //cerr<<"cereate node: "<<new_child<<endl;
   return new_child;
 }
 
-double MCTSGrima::WRAcc(GTokenData& tokenData,int classID,int support)
+double Hologram::WRAcc(GTokenData& tokenData,int classID,int support)
 {
   //return double(rand()%100) / double(100);
 
@@ -678,13 +681,13 @@ double MCTSGrima::WRAcc(GTokenData& tokenData,int classID,int support)
   double ret = ( support * (p_d - p) ) / number_of_graphs;
   //double ret = p_d - p;
 
-  //double ret = log( 2 + double(support) / double(number_of_graphs) ) * (p_d - p)   ;
+ // double ret = log( 1 + double(support) / double(number_of_graphs) ) * (p_d - p)   ;
   
   return ret;
   
 }
 
-void MCTSGrima::add_parent(MCTS_node* old, MCTS_node* parent,const GToken& lastExt)
+void Hologram::add_parent(searchtreenode* old, searchtreenode* parent,const GToken& lastExt)
 {
 
   if( parent->children_nodes->find(lastExt) != parent->children_nodes->end() )
@@ -699,7 +702,7 @@ void MCTSGrima::add_parent(MCTS_node* old, MCTS_node* parent,const GToken& lastE
   
 }
 
-void MCTSGrima::build_pattern(MCTS_node* selcted_node, GPattern* pPattern)
+void Hologram::build_pattern(searchtreenode* selcted_node, GPattern* pPattern)
 {
   //cerr<<"start build\n";
   stack<GToken> token_stack;
@@ -717,8 +720,8 @@ void MCTSGrima::build_pattern(MCTS_node* selcted_node, GPattern* pPattern)
   //cerr<<"end build\n";
 }
 
-int MCTSGrima::roll_out(MCTS_node* cur,
-                        MCTS_node* parent,
+int Hologram::roll_out(searchtreenode* cur,
+                        searchtreenode* parent,
                         bool rollout_first_level,
                         const vector<GGraph*>& v_Graphs,
                         const GGlobFreq       minFreq,    //Mininmum global frequency
@@ -1094,7 +1097,7 @@ int MCTSGrima::roll_out(MCTS_node* cur,
   return ret;
 }
 
-void MCTSGrima::update_ancestors(MCTS_node* cur, double _delta)
+void Hologram::update_ancestors(searchtreenode* cur, double _delta)
 { 
   if(cur == NULL )
     return;
@@ -1115,14 +1118,14 @@ void MCTSGrima::update_ancestors(MCTS_node* cur, double _delta)
   }
 }
 
-void MCTSGrima::delete_tree_node(MCTS_node* cur)
+void Hologram::delete_tree_node(searchtreenode* cur)
 {
   // delete connections from paretns
   //cerr<<"start deleting "<<cur<<"\n";
 
   for(auto dad : cur->parents)
   {
-    vector< map<GToken, MCTS_node*, GTokenGt>::iterator > it_vec;
+    vector< map<GToken, searchtreenode*, GTokenGt>::iterator > it_vec;
     for(auto it = dad->children_nodes->begin() ; 
         it != dad->children_nodes->end() ;
         it++)
@@ -1167,10 +1170,10 @@ void MCTSGrima::delete_tree_node(MCTS_node* cur)
   //cerr<<"end deleting\n";  
 }
 
-void MCTSGrima::clean()
+void Hologram::clean()
 {
   //cerr<<"here00\n";
-  unordered_map< string , MCTS_node* >::iterator it = nodes_pointers.begin();
+  unordered_map< string , searchtreenode* >::iterator it = nodes_pointers.begin();
   //cerr<<"here0\n";
   for(it = nodes_pointers.begin();
       it != nodes_pointers.end(); it++)
@@ -1180,32 +1183,19 @@ void MCTSGrima::clean()
       delete_tree_node (it->second);
     }
   }
-  //cerr<<"here1\n";
-  //dont clear this!
-  //all_patterns.clear()
   
   class_patterns.clear();
   nodes_pointers.clear();
   pattern_buffer_set.clear();
-  //cerr<<"here2\n";
+
   return;
-  // //cerr<<"start clean\n";
-  // search_tree_nodes.clear();
-  // if(root != NULL)
-  //   delete_search_subtree(root);
-  
-  // map<long long, MCTS_node*>::iterator it;
-  // for(it = search_tree_nodes.begin();
-  //     it != search_tree_nodes.end(); it++)
-  //   delete_tree_node (it->second);
-  // search_tree_nodes.clear();
-  // //cerr<<"end clean\n";
+ 
 }
 
-void MCTSGrima::delete_search_subtree(MCTS_node* cur)
+void Hologram::delete_search_subtree(searchtreenode* cur)
 {
 
-  map< GToken ,MCTS_node*, GTokenGt>::iterator it;
+  map< GToken ,searchtreenode*, GTokenGt>::iterator it;
 
   for(it = cur->children_nodes->begin();
       it != cur->children_nodes->end() ;it++)

@@ -53,7 +53,7 @@
  * Class that store the information stored in a MCTS tree node
  */
 
-class MCTS_node
+class searchtreenode
 {
   //---- PUBLIC --------------------------------------------------------------//
 public:
@@ -62,7 +62,7 @@ public:
   // Public variables ________________________________________________________//
   /// pointers to parents nodes
   long long nodeID;
-  vector<MCTS_node*> parents;
+  vector<searchtreenode*> parents;
   // the valise of the N parameter of the MCTS algorithm
   int N_node;
   // the value of the Q function "the evaluation function"
@@ -75,7 +75,7 @@ public:
   GToken lastExt;
   
   // possible extentions
-  map<GToken, MCTS_node*, GTokenGt>* children_nodes;
+  map<GToken, searchtreenode*, GTokenGt>* children_nodes;
   
   // occurance lists
   //GTokenData tokenData;
@@ -93,16 +93,16 @@ public:
    * Default constructor
    * Initialize variables and create new GVocab object
    */
-  MCTS_node();
+  searchtreenode();
 
-  MCTS_node(MCTS_node* _parent_,GToken ext,long long ID);
+  searchtreenode(searchtreenode* _parent_,GToken ext,long long ID);
 
   /**
    * @brief ~MCTS
    * Default Destructor
    * Free memory by deleting GVocab object and clearing vectors
    */
-  ~MCTS_node();
+  ~searchtreenode();
 
   // Accessor ________________________________________________________________//
   // Mutator _________________________________________________________________//

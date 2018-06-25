@@ -107,7 +107,7 @@ void GVocab::saveVocab( string filename, vector<string> v_ClassName, vector<int>
     patFile << v_AllPatterns.at(iPat);
   patFile.close();
 
-
+  return;
   for ( uint iClass = 0; iClass < v_PatternByClass.size(); iClass++ )
   {
     for ( uint iPat = 0; iPat < v_PatternByClass.at(iClass).size(); iPat++ )

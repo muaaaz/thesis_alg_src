@@ -530,8 +530,6 @@ void GCanonicalDFSComputer::subRecurse( )
   {
     // If pPattern DFS code < current DFS tested code.
     // i.e. pPattern DFS code not canonical.
-    //cerr<<"stop here:\n";
-    //cerr<<pPattern->v_Tokens[position]<<" "<<token.codeToken;
     stop = true;
     goto cleanup;
   }
@@ -586,23 +584,14 @@ cleanup:
 
 GPattern* GCanonicalDFSComputer::getCanonincal()
 {
-  //cerr<<"start of get can\n";
   /*
-   * @brief isCanonincal
-   * Function that check if code of Pattern is canonical in three step.
-   * Step One   : If the pattern is only one edge, then it's canonical
-   * Step Two   : Check in the full DFS code of the pattern if there's no clue
-   *              to directly know that pattern is not canonical.
-   * Step Three : If step one and step two passed, then begin a recursion to
-   *              construct all possible DFS Code of the pattern to find if
-   *              there's a DFS Code greater than the current one.
-   * @return TRUE if pattern is canonical, FALSE else.
+   * @brief getCanonincal
+   * Function that check returns the canonical code of a pattern
    */
-  // Instanciate variables for the second step
+
   GEdge smallestEdge;
   GEdge tmpEdge;
   GToken tmpToken;
-  
 
   // Node id of the last node that wears an extension from 0
   vector<GCanonicalToken> v_firstEdges;
@@ -925,22 +914,6 @@ void GCanonicalDFSComputer::get_recurse( GEdgeAngle prevAngle,
                                      GNodeID nodeLargeJ )
 {
 
-  //cerr<<"start of get_rec "<<nodeLargeI<<" "<<nodeLargeJ<<" \n";
-  //cerr<<pTestNewPat;
-  /*
-   * @brief recurse
-   * Methods that construct all possible extension of the current new pattern
-   * and store them in v_StackCode.
-   * If prevAngle==HGNOANGLE,
-   *  construct all extenstion from nodeLargeI and nodeLargeJ
-   * Else
-   *  construct only all exteion from nodeLargeJ
-   * Once done, it will sort these extenstion and call subRecurse() to test it.
-   * @param prevAngle  : The orientation of the previous edge
-   * @param nodeLargeI  : The node from of the last construct edge
-   * @param nodeLargeJ  : The node dest of the last construct edge
-   */
-
   // Initialize variables
   uint v_NewCodeSize = v_StackCode.size();
   v_CodeIndex[nodeLargeJ] = nbNodes ;
@@ -1033,7 +1006,6 @@ void GCanonicalDFSComputer::get_recurse( GEdgeAngle prevAngle,
     }
   }
 
-  // no changes here, probably!
   if ( v_NewCode.size() < pPattern->v_Tokens.size() && v_StackCode.empty() )
   {
     for ( uint i = 0 ; i < pPattern->pGraph->v_Nodes[ v_GraphIndex[0] ].v_Edges.size() ; i++)
@@ -1086,25 +1058,10 @@ void GCanonicalDFSComputer::get_recurse( GEdgeAngle prevAngle,
   }
   v_StackCode.resize( v_NewCodeSize );
 }
-// End of GCanonicalDFSComputer::get_recurse( GEdgeAngle prevAngle,
-//                                            GNodeID nodeLargeI,
-//                                            GNodeID nodeLargeJ )
 
 void GCanonicalDFSComputer::get_subRecurse( )
 {
-  //cerr<<"start of get_sub_rec\n";
-  /*
-   * @brief subRecurse
-   * Methods that will add the greatest extension previously construct from
-   * recurse() to the new DFS Code and compare it to the equivalent line code of
-   * the pattern to test.
-   * If the pattern DFS code is less than the new one
-   *  the pattern DFS Code is not canonical, exit the test
-   * Else if the pattern DFS code is greater than the new one
-   *  Exit subRecurse() to test another extension
-   * Call recurse to extends the current new pattern from the last node or all
-   * the previous one
-   */
+
   //cerr<<"Start of get subrec!!\n";
   //cerr<<pTestNewPat;
   // Instanciate and update variable
@@ -1121,13 +1078,12 @@ void GCanonicalDFSComputer::get_subRecurse( )
     stop = true;
     goto cleanup;
   }
-  //cerr<<"here0\n";
 
   // Set the last extension of v_StackCode, i.e. the greatest one
 
   if ( v_StackCode.back().codeToken.direction == gForward)
   {
-    //cerr<<"here1\n";
+    
     token = v_StackCode.back();
     token.codeToken.nodeDest = nbNodes;
     v_NewCode.push_back( v_StackCode.back() );
@@ -1140,11 +1096,11 @@ void GCanonicalDFSComputer::get_subRecurse( )
   }
   else
   {
-    //cerr<<"here2\n";
+    
     vector<GCanonicalToken> v_TempToken;
     while ( v_StackCode.back().codeToken.direction == gBackward )
     {
-//      cerr<<"token2\n";
+  
       token = v_StackCode.back();
       token.codeToken.nodeDest = v_CodeIndex[token.nodeLargeJ];
       v_TempToken.push_back( token );
@@ -1164,20 +1120,14 @@ void GCanonicalDFSComputer::get_subRecurse( )
     }
     v_NewCode.push_back( v_TempToken.back() );
   }
- // cerr<<"here3\n";
+ 
   // Compare new extension
   if ( cmp < 0 || ( largerPatternFound && cmp) )
   {
     // If pPattern DFS code < current DFS tested code.
     // i.e. pPattern DFS code not canonical.
-    //cerr<<"here00, "<<pTestNewPat<<" \n";
-    //cerr<<token.codeToken<<endl;
-    //cerr<<"here4\n";
-    //cerr<<"push4:\n"<<token.codeToken;
+    
     pTestNewPat->push_back( token.codeToken, cocoboolean );
-    //cerr<<"here5\n";
-    //token.codeToken.nodeDest = GNONODEID;
-///    cerr<<"here0\n";
     largerPatternFound = true;
     //goto cleanup;
   }
@@ -1190,11 +1140,11 @@ void GCanonicalDFSComputer::get_subRecurse( )
   }
  
   // End if, mean pPattern code and current DFS code are the same.
-  //cerr<<"here6\n";
+  
   saveToken = v_StackCode.back();
   // check this:
   v_StackCode.pop_back();
- // cerr<<"here2\n";
+ 
   if ( saveToken.codeToken.direction == gForward )
   {
     // IF last added edge was forward, try to extends from the last node added
@@ -1206,7 +1156,7 @@ void GCanonicalDFSComputer::get_subRecurse( )
   {
     // If last added edge was backward, try to extends from previous last node added
     // remove equivalent edge which is forward and but it into buffer.
-  //  cerr<<"here3\n";
+ 
     for ( uint i = 0; i < v_StackCode.size(); i++ )
     {
       if ( v_StackCode.at(i).nodeLargeI == saveToken.nodeLargeJ
@@ -1216,7 +1166,7 @@ void GCanonicalDFSComputer::get_subRecurse( )
         v_StackCode.erase( v_StackCode.begin() + i );
       }
     }
-   // cerr<<"here4\n";
+   
     get_subRecurse();
     if(stop)
       goto cleanup;

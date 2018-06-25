@@ -28,10 +28,9 @@
 #include <sstream>
 // Include project class
 #include "global.hpp"
-//#include "grima/gglobal.hpp"
-#include "grima/gdatabase.hpp"
-#include "grima/grima.hpp"
-#include "grima/MCTSgrima.hpp"
+
+#include "hologram/gdatabase.hpp"
+#include "hologram/hologram.hpp"
 
 
 // for testing mod
@@ -39,13 +38,11 @@
 
 #ifdef TESTCAN
 
-#include "grima/gpattern.hpp"
-#include "grima/gcanonicaldfscomputer.hpp"
-#include "grima/gglobal.hpp"
+#include "hologram/gpattern.hpp"
+#include "hologram/gcanonicaldfscomputer.hpp"
+#include "hologram/gglobal.hpp"
 
 #endif
-//#include "grima/greader.hpp"
-//#include "grima/gglobal.hpp"
 
 
 //=============================== NAMESPACE ==================================//
@@ -292,18 +289,14 @@ param PARAM = param();
   * @return 0 if no issu, 1 otherwise
 */
 
-// ./grima2D -o /udd/mtwaty/Downloads/thesis_alg_src/grima2D/output -T 1 -f 0.5 in.gri
+// ./hologram2D -o /udd/mtwaty/Downloads/thesis_alg_src/hologram2D/output -T 1 -f 0.5 in.gri
 
 int incremental_counter = 0;
 
 int main( int argc, char **argv )
 {
-
-  cout << "#==== START OF MCTS GRIMA !" << endl;
-
-  GDatabase graphDB;
-  MCTSGrima grima;
-
+  srand(time(0));
+  cout << "#==== START OF Hologram !" << endl;
   parseArg( argc, argv, PARAM );
 
   cerr <<"input file "<< PARAM.INFILE << endl;
@@ -311,23 +304,21 @@ int main( int argc, char **argv )
   cerr <<"time "<< PARAM.TIMEOUT << endl;
   cerr <<"freq "<< PARAM.MINFREQ << endl;
 
+  GDatabase graphDB;
   graphDB.createGrapheDB( PARAM.INFILE );
-  grima.minF      = PARAM.MINFREQ;
-  grima.pClassDB  = graphDB.v_GClassDB.at(0);
-  grima.v_ClassName = graphDB.v_ClassName;
+  
+  Hologram hologram(PARAM.MINFREQ,graphDB.v_GClassDB.at(0),graphDB.v_ClassName);
 
-  grima.initNbPatternByClass( );
-  for ( int iClassDB = 1; iClassDB <= grima.pClassDB->number_of_classes; iClassDB++ )
+  hologram.initialize();
+  for ( int iClassDB = 1; iClassDB <= hologram.pClassDB->number_of_classes; iClassDB++ )
   {
-    grima.current_class_id = iClassDB;
-    grima.processMining();
-    cerr<<"start clean\n";
-    grima.clean();
-    cerr<<"end clean\n";
+    hologram.set_class_id(iClassDB);
+    hologram.processMining();
+    hologram.clean();
   }
   
-  grima.saveData();
-  cout << "#==== END OF MCTS GRIMA !" << endl;
+  hologram.saveData();
+  cout << "#==== END OF Hologram !" << endl;
   exit(0);
 }
 // End of main( int argc, char **argv )

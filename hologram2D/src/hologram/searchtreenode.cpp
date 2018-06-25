@@ -36,7 +36,7 @@
 #include <iomanip>
 #include <algorithm>
 // Include project class
-#include "MCTS.hpp"
+#include "searchtreenode.hpp"
 #include "global.hpp"
 
 //=============================== NAMESPACE ==================================//
@@ -54,8 +54,8 @@ using namespace std;
 // Public Constructor/Desctructor ____________________________________________//
 
 
-MCTS_node::MCTS_node():
-  parents(vector<MCTS_node*>(0,0)),
+searchtreenode::searchtreenode():
+  parents(vector<searchtreenode*>(0,0)),
   N_node(1),
   Q(0),
   is_fully_expanded(false),
@@ -66,14 +66,14 @@ MCTS_node::MCTS_node():
    * Copy Desc
    */
   parents.clear();
-  children_nodes    = new map<GToken, MCTS_node*,     GTokenGt>();
+  children_nodes    = new map<GToken, searchtreenode*,     GTokenGt>();
   valid_extenstions = vector<pair<GToken, GExtensionData> > ();
   children_nodes->clear();
   valid_extenstions.clear();
 }
 
-MCTS_node::MCTS_node(MCTS_node* _parent_,GToken ext,long long ID):
-  parents(vector<MCTS_node*>(0,0)),
+searchtreenode::searchtreenode(searchtreenode* _parent_,GToken ext,long long ID):
+  parents(vector<searchtreenode*>(0,0)),
   N_node(1),
   Q(0),
   is_fully_expanded(false),
@@ -87,7 +87,7 @@ MCTS_node::MCTS_node(MCTS_node* _parent_,GToken ext,long long ID):
    */
   parents.clear();
   parents.push_back(_parent_);
-  children_nodes    = new map<GToken, MCTS_node*,     GTokenGt>();
+  children_nodes    = new map<GToken, searchtreenode*,     GTokenGt>();
   valid_extenstions = vector<pair<GToken, GExtensionData> > ();
   children_nodes->clear();
   valid_extenstions.clear();
@@ -95,7 +95,7 @@ MCTS_node::MCTS_node(MCTS_node* _parent_,GToken ext,long long ID):
 
 
 
-MCTS_node::~MCTS_node()
+searchtreenode::~searchtreenode()
 {
   /*
    * TODO : RD

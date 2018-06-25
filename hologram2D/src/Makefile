@@ -47,7 +47,7 @@ SOURCES       = main.cpp \
 		hologram/greader.cpp \
 		hologram/gdatabase.cpp \
 		hologram/ggraph.cpp \
-		hologram/gsparseset.cpp \
+		hologram/goccurrenceslist.cpp \
 		hologram/hologram.cpp \
 		hologram/gextensioncollect.cpp \
 		hologram/gpattern.cpp \
@@ -59,7 +59,7 @@ OBJECTS       = main.o \
 		greader.o \
 		gdatabase.o \
 		ggraph.o \
-		gsparseset.o \
+		goccurrenceslist.o \
 		hologram.o \
 		gextensioncollect.o \
 		gpattern.o \
@@ -207,7 +207,7 @@ main.o: main.cpp global.hpp \
 		hologram/gglobal.hpp \
 		hologram/gdatabase.hpp \
 		hologram/ggraph.hpp \
-		hologram/gsparseset.hpp \
+		hologram/goccurrenceslist.hpp \
 		hologram/hologram.hpp \
 		hologram/gvocab.hpp \
 		hologram/gpattern.hpp \
@@ -224,7 +224,7 @@ gdatabase.o: hologram/gdatabase.cpp global.hpp \
 		hologram/gglobal.hpp \
 		hologram/greader.hpp \
 		hologram/ggraph.hpp \
-		hologram/gsparseset.hpp
+		hologram/goccurrenceslist.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gdatabase.o hologram/gdatabase.cpp
 
 ggraph.o: hologram/ggraph.cpp global.hpp \
@@ -233,16 +233,16 @@ ggraph.o: hologram/ggraph.cpp global.hpp \
 		hologram/gglobal.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o ggraph.o hologram/ggraph.cpp
 
-gsparseset.o: hologram/gsparseset.cpp hologram/gsparseset.hpp \
+goccurrenceslist.o: hologram/goccurrenceslist.cpp hologram/goccurrenceslist.hpp \
 		hologram/gglobal.hpp
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gsparseset.o hologram/gsparseset.cpp
+	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o goccurrenceslist.o hologram/goccurrenceslist.cpp
 
 hologram.o: hologram/hologram.cpp hologram/hologram.hpp \
 		hologram/gglobal.hpp \
 		hologram/ggraph.hpp \
 		hologram/greader.hpp \
 		hologram/gdatabase.hpp \
-		hologram/gsparseset.hpp \
+		hologram/goccurrenceslist.hpp \
 		hologram/gvocab.hpp \
 		hologram/gpattern.hpp \
 		hologram/gextensioncollect.hpp \
@@ -255,7 +255,7 @@ searchtreenode.o: hologram/searchtreenode.cpp hologram/searchtreenode.hpp \
 		hologram/ggraph.hpp \
 		hologram/greader.hpp \
 		hologram/gdatabase.hpp \
-		hologram/gsparseset.hpp \
+		hologram/goccurrenceslist.hpp \
 		hologram/gvocab.hpp \
 		hologram/gpattern.hpp \
 		hologram/gextensioncollect.hpp \
@@ -270,7 +270,7 @@ gextensioncollect.o: hologram/gextensioncollect.cpp global.hpp \
 		hologram/greader.hpp \
 		hologram/gglobal.hpp \
 		hologram/gdatabase.hpp \
-		hologram/gsparseset.hpp \
+		hologram/goccurrenceslist.hpp \
 		hologram/gsubgraphiso.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gextensioncollect.o hologram/gextensioncollect.cpp
 
@@ -279,7 +279,7 @@ gpattern.o: hologram/gpattern.cpp hologram/gpattern.hpp \
 		hologram/greader.hpp \
 		hologram/gglobal.hpp \
 		hologram/gdatabase.hpp \
-		hologram/gsparseset.hpp \
+		hologram/goccurrenceslist.hpp \
 		hologram/gcanonicaldfscomputer.hpp \
 		global.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gpattern.o hologram/gpattern.cpp
@@ -290,7 +290,7 @@ gsubgraphiso.o: hologram/gsubgraphiso.cpp hologram/gsubgraphiso.hpp \
 		hologram/greader.hpp \
 		hologram/gglobal.hpp \
 		hologram/gdatabase.hpp \
-		hologram/gsparseset.hpp
+		hologram/goccurrenceslist.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gsubgraphiso.o hologram/gsubgraphiso.cpp
 
 gvocab.o: hologram/gvocab.cpp global.hpp \
@@ -299,7 +299,7 @@ gvocab.o: hologram/gvocab.cpp global.hpp \
 		hologram/gdatabase.hpp \
 		hologram/greader.hpp \
 		hologram/ggraph.hpp \
-		hologram/gsparseset.hpp \
+		hologram/goccurrenceslist.hpp \
 		hologram/gpattern.hpp \
 		hologram/gsubgraphiso.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gvocab.o hologram/gvocab.cpp
@@ -310,7 +310,7 @@ gcanonicaldfscomputer.o: hologram/gcanonicaldfscomputer.cpp hologram/gcanonicald
 		hologram/greader.hpp \
 		hologram/gpattern.hpp \
 		hologram/gdatabase.hpp \
-		hologram/gsparseset.hpp
+		hologram/goccurrenceslist.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o gcanonicaldfscomputer.o hologram/gcanonicaldfscomputer.cpp
 
 ####### Install

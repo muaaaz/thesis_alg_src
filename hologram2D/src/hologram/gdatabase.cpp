@@ -8,6 +8,9 @@
  *   Copyright (C) 2016 by Romain Deville                                  *
  *   romain.deville[at]insa-lyon.fr                                        *
  * ----------------------------------------------------------------------- *
+ *   Copyright (C) 2018 by Muaz Twaty                                      *
+ *   muaz.sy123[at]gmail.com                                               *
+ *                                                                         *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -87,7 +90,8 @@ void GDatabase::createGrapheDB( string &graphFile )
   {
     if ( PARAM.INDIRECT_HOLEMINING || PARAM.DIRECT_HOLEMINING || PARAM.FRAMEHOLE )
       processHoleInGrid( v_GClassDB.at(i) );
-    processSparseSet( v_GClassDB.at(i) );
+    processOccurrencesList( v_GClassDB.at(i) );
+    
   }
 }
 // End of GDatabase::createGrapheDB( string &graphFile, bool hole )
@@ -162,7 +166,7 @@ void GDatabase::read( string filename )
 }
 // End of GDatabase::read( string filename )
 
-void GDatabase::processSparseSet( GClassDB *pClassDB )
+void GDatabase::processOccurrencesList( GClassDB *pClassDB )
 {
   /*
    * TODO : RD
@@ -176,7 +180,7 @@ void GDatabase::processSparseSet( GClassDB *pClassDB )
         processEdgeSparseSet( pClassDB, iGraph, iNode, v_Nodes );
   }
 }
-// End of GDatabase::processSparseSet( GClassDB *pClassDB )
+// End of GDatabase::processOccurrencesList( GClassDB *pClassDB )
 
 void GDatabase::processEdgeSparseSet( GClassDB           *pClassDB,
                                       uint               iGraph,
@@ -237,20 +241,20 @@ void GDatabase::addEdgeSpatialSparseSet( GNodeLabel nodeLabelFrom,
   pair< map< GToken, GTokenData, GTokenGt>::iterator, bool>
       p = pClassDB->m_TokenData.insert( p_Data );
   // Store this edge into sparse set
-  GSparseSet::mapEdge sparseEdge;
+  GOccurrencesList::mapEdge sparseEdge;
   sparseEdge.nodeFrom = iNodeFrom;
   sparseEdge.nodeDest = iNodeDest;
   sparseEdge.edgeId   = iEdge;
-  if ( p.first->second.v_SparseOcc.size() == 0
-       || p.first->second.v_SparseOcc.back().graphID
+  if ( p.first->second.v_OccurrencesList.size() == 0
+       || p.first->second.v_OccurrencesList.back().graphID
        != pClassDB->v_ClassGraphs.at(iGraph)->graphID)
   {
     GGraph *pGraph = pClassDB->v_ClassGraphs.at(iGraph);
-    GSparseSet sparseSet( pGraph->graphID, pGraph );
-    p.first->second.v_SparseOcc.push_back( sparseSet );
+    GOccurrencesList occurrencesList( pGraph->graphID, pGraph );
+    p.first->second.v_OccurrencesList.push_back( occurrencesList );
     p.first->second.freq++;
   }
-  p.first->second.v_SparseOcc.back().add( sparseEdge );
+  p.first->second.v_OccurrencesList.back().add( sparseEdge );
 }
 // End of GDatabase::addEdgeSpatialSparseSet( GNodeLabel nodeLabelFrom,
 //                                            GNodeLabel nodeLabelDest,
@@ -290,20 +294,20 @@ void GDatabase::addEdgeTemporalSparseSet( GNodeLabel nodeLabelFrom,
   pair< map< GToken, GTokenData, GTokenGt>::iterator, bool>
       p = pClassDB->m_TokenData.insert( p_Data );
   // Store this edge into sparse set
-  GSparseSet::mapEdge sparseEdge;
+  GOccurrencesList::mapEdge sparseEdge;
   sparseEdge.nodeFrom = iNodeFrom;
   sparseEdge.nodeDest = iNodeDest;
   sparseEdge.edgeId   = iEdge;
-  if ( p.first->second.v_SparseOcc.size() == 0
-       || p.first->second.v_SparseOcc.back().graphID
+  if ( p.first->second.v_OccurrencesList.size() == 0
+       || p.first->second.v_OccurrencesList.back().graphID
        != pClassDB->v_ClassGraphs.at(iGraph)->graphID)
   {
     GGraph *pGraph = pClassDB->v_ClassGraphs.at(iGraph);
-    GSparseSet sparseSet( pGraph->graphID, pGraph );
-    p.first->second.v_SparseOcc.push_back( sparseSet );
+    GOccurrencesList occurrencesList( pGraph->graphID, pGraph );
+    p.first->second.v_OccurrencesList.push_back( occurrencesList );
     p.first->second.freq++;
   }
-  p.first->second.v_SparseOcc.back().add( sparseEdge );
+  p.first->second.v_OccurrencesList.back().add( sparseEdge );
 }
 // End of GDatabase::addEdgeTemporalSparseSet( GNodeLabel nodeLabelFrom,
 //                                             GNodeLabel nodeLabelDest,

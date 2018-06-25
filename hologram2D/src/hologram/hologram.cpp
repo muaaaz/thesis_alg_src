@@ -6,7 +6,10 @@
  *   baptiste.jeudy at univ-st-etienne fr                                  *
  * ----------------------------------------------------------------------- *
  *   Copyright (C) 2015 by Romain Deville                                  *
- *   romain.deville[at]insa-lyon.fr                                        *
+ *   romain.deville[at]insa-lyon.fr   
+ * ----------------------------------------------------------------------- *
+ *   Copyright (C) 2018 by Muaz Twaty                                      *
+ *   muaz.sy123[at]gmail.com                                               *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -52,7 +55,7 @@ using namespace std;
 GToken tmpT1 = GToken();
 GToken tmpT2 = GToken();
 
-
+// debuging use only
 int de_arr[10000];
 int sel_arr[10000];
 
@@ -163,14 +166,14 @@ int Hologram::processMining( )
 
   if(pattern_buffer_set.size())
   {
-    cerr<<"est not clear\n";
+    cerr<<"ERROR: set not cleared!\n";
     exit(1);
   }
   
   memset(de_arr,0,sizeof de_arr);
   memset(sel_arr,0,sizeof sel_arr);
   
-  cerr<<"start processMining\n";
+  cerr<<"Start processMining\n";
   // Initialize pattern id to zero
   int minFreq      = 0;
   int returnStatus = 0;
@@ -178,12 +181,6 @@ int Hologram::processMining( )
 
   v_PatternCurrClass.clear();
   
-  
-
-  // cerr<<"number_of_classes: "<<number_of_classes<<endl;
-  // cerr<<"number_of_graphs: "<<number_of_graphs<<endl;
-  // cerr<<"class count: ";
-  // print(class_count);
   
   /*************************************************************************/
   /*   REAL STUFF BEGIN HERE                                               */
@@ -270,7 +267,6 @@ void Hologram::saveData( )
   cout  << "mapping_extension_time_sec,"   << (double)mappingExtTick / CLOCKS_PER_SEC << endl;
   cout  << "total_time_sec,"       << (double)totalTick / CLOCKS_PER_SEC << endl;
   cout << endl;
-  cerr<<"end saving\n";
 }
 
 void Hologram::unbuffer_class_patterns()
@@ -304,18 +300,18 @@ void Hologram::unbuffer_class_patterns()
 
 void print(GTokenData ob)
 {
-  for ( int i=0; i < int(ob.v_SparseOcc.size()) ; ++i)
+  for ( int i=0; i < int(ob.v_OccurrencesList.size()) ; ++i)
   {
     
-    if(!ob.v_SparseOcc.at(i).size())
+    if(!ob.v_OccurrencesList.at(i).size())
       continue;
-    cerr<<"G "<<ob.v_SparseOcc.at(i).graphID<<" C "<<ob.v_SparseOcc.at(i).pGraph->classID<<":\n";
-    GSparseSet SparseOccTmp = ob.v_SparseOcc.at(i);
-    uint domainSize = SparseOccTmp.size();
+    cerr<<"G "<<ob.v_OccurrencesList.at(i).graphID<<" C "<<ob.v_OccurrencesList.at(i).pGraph->classID<<":\n";
+    GOccurrencesList occurrencesListTmp = ob.v_OccurrencesList.at(i);
+    uint domainSize = occurrencesListTmp.size();
 
     for ( uint iDom = 0; iDom < domainSize  ; iDom++ )
     {
-      GSparseSet::mapEdge mEdge = SparseOccTmp.at(iDom);
+      GOccurrencesList::mapEdge mEdge = occurrencesListTmp.at(iDom);
       cerr<<mEdge.nodeFrom<<' '<<mEdge.nodeDest<<endl;
     }
     
@@ -329,7 +325,7 @@ void print( map<GToken, GTokenData, GTokenGt> &m_TokenData)
   
   while(it != m_TokenData.end())
   {
-    cerr<<"token: "<<it->first.nodeLabelFrom<<' '<<it->first.nodeLabelDest<<'\n';//<<it->second.v_SparseOcc.size()<<" :\n";
+    cerr<<"token: "<<it->first.nodeLabelFrom<<' '<<it->first.nodeLabelDest<<'\n';//<<it->second.v_OccurrencesList.size()<<" :\n";
     print(it->second);
     it++;
   }
@@ -375,8 +371,8 @@ int Hologram::search( vector<GGraph*>                   &v_Graphs,
       tmp.nbOcc     = 0;
       tmp.frequency = it->second.freq;
       
-      for ( uint iGraph = 0 ; iGraph < it->second.v_SparseOcc.size() ; iGraph++ )
-        tmp.nbOcc += it->second.v_SparseOcc.at(iGraph).size();
+      for ( uint iGraph = 0 ; iGraph < it->second.v_OccurrencesList.size() ; iGraph++ )
+        tmp.nbOcc += it->second.v_OccurrencesList.at(iGraph).size();
       
       root->valid_extenstions.push_back(make_pair(it->first,tmp));
     }
@@ -397,12 +393,6 @@ int Hologram::search( vector<GGraph*>                   &v_Graphs,
       break;
     }
 
-    // if(PARAM.NBPATLIMIT != -1 && number_of_mined_patterns > PARAM.NBPATLIMIT)
-    // {
-    //   cerr<<"Reached the limit in number of patterns\n";
-    //   break;
-    // }
-
     roll_depth = de = 0;
     
     delta = 0;
@@ -414,9 +404,8 @@ int Hologram::search( vector<GGraph*>                   &v_Graphs,
     
     if(selcted_node == NULL)
     {
-     // cerr<<"bad sel\n";
       // if the selection lead to a node which iss fully expanded or 
-      //has to possible expansions, we should delete it
+      // has to possible expansions, we should delete it
       // if this node is the root, then we a comnplete search has been done
       if(last_father->parents.size() == 0 || last_father == root)
       {
@@ -445,7 +434,7 @@ int Hologram::search( vector<GGraph*>                   &v_Graphs,
       canonical_code_string.shrink_to_fit();
       if(last_father->children_nodes->size())
       { 
-        cerr<<"pad delete, children number: "<<last_father->children_nodes->size()<<"\n";
+        cerr<<"ERROR: pad delete, children number: "<<last_father->children_nodes->size()<<"\n";
         exit(1);
       }
       delete_tree_node(last_father);
@@ -454,7 +443,6 @@ int Hologram::search( vector<GGraph*>                   &v_Graphs,
       continue;
     }
 
-    //cerr<<"good sel\n";
     GToken ext;
     GExtensionData tmp_GExtensionData;
     // expand the node and save the edge that has been added
@@ -463,11 +451,9 @@ int Hologram::search( vector<GGraph*>                   &v_Graphs,
     // if the node has no expansions, mark it as fully expanded, it could be deleted next iteration
     if(exp_node == NULL)
     {
-      //cerr<<"bad expand\n";
       budget++;
       continue;
     }
-    //cerr<<"good expand\n";
     // build the pattern
     GPattern* currentPattern = new GPattern();
     currentPattern->pGraph->graphID   = freqPatternId;
@@ -492,7 +478,6 @@ int Hologram::search( vector<GGraph*>                   &v_Graphs,
     roll_depth = 0;
     do_update = true;
     delta = 0;
-    //cerr<<"start roll\n";
     // in the first level of the rollout, we compute the possible expansions of a pattern
     roll_out( exp_node,
               selcted_node,
@@ -511,30 +496,27 @@ int Hologram::search( vector<GGraph*>                   &v_Graphs,
 
     // debugging info
     //if(roll_depth > 100)
-    //  cerr<<"L: "<<roll_depth<<endl;
 
     if(do_update)
     {
-      //cerr<<"L: "<<roll_depth<<endl;
       update_ancestors(exp_node,delta);
     }
     else
     {
       budget++;
     }
+
     // memory cleaning
-    for(int i=0; i < int(tmp_GTokenData.v_SparseOcc.size()) ; ++i)
+    for(int i=0; i < int(tmp_GTokenData.v_OccurrencesList.size()) ; ++i)
     {
-      tmp_GTokenData.v_SparseOcc[i].clear();
+      tmp_GTokenData.v_OccurrencesList[i].clear();
     }
-    tmp_GTokenData.v_SparseOcc.clear();
-    tmp_GTokenData.v_SparseOcc.shrink_to_fit();
+    tmp_GTokenData.v_OccurrencesList.clear();
+    tmp_GTokenData.v_OccurrencesList.shrink_to_fit();
     delete currentPattern;
   }
 
   cerr<<"Budget has finished\n";
-  // budget is finished
-  //print_report();
   return 0;
 }
 
@@ -545,10 +527,8 @@ int Hologram::search( vector<GGraph*>                   &v_Graphs,
 
 inline double Hologram::UCB(searchtreenode* cur, searchtreenode* child)
 {
-  //cerr<<"child->N_node: "<<child->N_node<<endl;
-  //return double(rand()%100) / double(100);
   double ret = child->Q + 2 * PARAM.C_p * sqrt( 2 * log(double(cur->N_node)) / double(child->N_node)  );
-  return ret;// logaritem base??
+  return ret;
 }
 
 searchtreenode* Hologram::best_child(searchtreenode* cur,GToken& ext)
@@ -565,21 +545,17 @@ searchtreenode* Hologram::best_child(searchtreenode* cur,GToken& ext)
     
     it++;
     
-    //cerr<<"children number: "<<cur->children_nodes->size()<<endl;;
     for(;it != cur->children_nodes->end() ;it++)
     {
       cur_UCB = UCB(cur,it->second);
-      //cerr<<cur_UCB<<endl;
       if( cur_UCB > mx_UCB)
       {
         mx_UCB = cur_UCB;
         ret = it->second;
         ext = it->first;
       }
-
     }
-   
-    // ret could be NULL 
+  
     return ret;
 }
 
@@ -587,20 +563,17 @@ searchtreenode* Hologram::select(searchtreenode* cur)
 {
   int mx_depth = int(1e6);
   int cc = 1;
-  //cerr<<"start selcetion\n";
+  
   while(mx_depth--){ // some stopping condition should we change this?
-    //cerr<<"go deeper "<<cc<<" node address: "<<cur<<endl;
+    
     if(!cur->is_fully_expanded)
     {
-      //cerr<<"sel return "<<cur<<endl;
       return cur;
     }
     
     // if there is no children
-    //cerr<<cur->children_nodes->size()<<endl;
     if(cur->children_nodes->size() == 0){
       last_father = cur;
-      //cerr<<last_father<<" will be deleted\n";
       return NULL;
     }
     
@@ -615,19 +588,15 @@ searchtreenode* Hologram::select(searchtreenode* cur)
     cur = best_child(cur,ext);
     if(cur == NULL)
     {
-      //cerr<<last_father<<" will be deleted\n";
       return NULL;
     }
-    //cerr<<"go deeper "<<cc<<" node address: "<<cur<<endl;
-    // build the pattern
-    //pPattern->push_back(ext,false);
+
   }
 
   // this sould never be excuted
-  cerr<<"select depth not enough\n";
+  cerr<<"ERROR: select depth not enough\n";
   exit(1);
 
-  return cur; //should change this???
 }
 
 // we we want to expand a node we expect that teh node has it valid_extenstions ready but not all the children_nodes
@@ -655,20 +624,20 @@ searchtreenode* Hologram::expand(searchtreenode* cur,GToken& ext,GExtensionData&
   }
 
   searchtreenode* new_child = new searchtreenode(cur,ext,nodes_counter++);
-  //cerr<<"cereate node: "<<new_child<<endl;
   return new_child;
 }
 
 double Hologram::WRAcc(GTokenData& tokenData,int classID,int support)
 {
+
   //return double(rand()%100) / double(100);
 
   double p_d = 0;
 
-  for( int i = 0 ; i < int(tokenData.v_SparseOcc.size()) ; ++i)
+  for( int i = 0 ; i < int(tokenData.v_OccurrencesList.size()) ; ++i)
   {
-    if(tokenData.v_SparseOcc.at(i).pGraph->classID == classID 
-        && tokenData.v_SparseOcc.at(i).size() > 0)
+    if(tokenData.v_OccurrencesList.at(i).pGraph->classID == classID 
+        && tokenData.v_OccurrencesList.at(i).size() > 0)
     {  
       p_d = p_d + 1.0;
     }
@@ -679,9 +648,12 @@ double Hologram::WRAcc(GTokenData& tokenData,int classID,int support)
   double p = class_count[classID] / number_of_graphs;
 
   double ret = ( support * (p_d - p) ) / number_of_graphs;
+  
+  //RAcc:
   //double ret = p_d - p;
 
- // double ret = log( 1 + double(support) / double(number_of_graphs) ) * (p_d - p)   ;
+  //LOG WRAcc:
+  //double ret = log( 1 + double(support) / double(number_of_graphs) ) * (p_d - p)   ;
   
   return ret;
   
@@ -696,7 +668,6 @@ void Hologram::add_parent(searchtreenode* old, searchtreenode* parent,const GTok
   }
   parent->children_nodes->insert(make_pair(lastExt,old));
   
-  // wot?
   if(old->parents.back() != parent)
     old->parents.push_back(parent);
   
@@ -704,20 +675,17 @@ void Hologram::add_parent(searchtreenode* old, searchtreenode* parent,const GTok
 
 void Hologram::build_pattern(searchtreenode* selcted_node, GPattern* pPattern)
 {
-  //cerr<<"start build\n";
   stack<GToken> token_stack;
   while (selcted_node->parents.size() > 0)
   {
     token_stack.push(selcted_node->lastExt);
     selcted_node = selcted_node->parents[0];
   }
-  //cerr<<token_stack.size()<<endl;
   while(!token_stack.empty())
   {
     pPattern->push_back(token_stack.top(),false);
     token_stack.pop();
   }
-  //cerr<<"end build\n";
 }
 
 int Hologram::roll_out(searchtreenode* cur,
@@ -731,7 +699,6 @@ int Hologram::roll_out(searchtreenode* cur,
                         GExtensionData  &suppData,   // Tmp variable, supposed frequency
                         GExtensionData  &prevData )
 {
-  //cerr<<"here0\n";
   N_delta++;
   GGlobFreq nbOcc        = 0;
   // current frequency of P
@@ -744,24 +711,19 @@ int Hologram::roll_out(searchtreenode* cur,
 
   // Add the extension to the pattern
   pPattern->push_back( lastExt, false );
-  //cerr<<"here1\n";
   if(rollout_first_level)
   {
     firstTickTracker = clock();
     string canonical_code_string = pPattern->getCanonincalString();
     auto it = nodes_pointers.find(canonical_code_string);
-    //cerr<<"here2\n";
     if(it == nodes_pointers.end())
     {
-      //cerr<<"here3\n";
-      //cerr<<"create new node "<<cur<<"\n";
       nodes_pointers[canonical_code_string] = cur;
       canonical_code_string.clear();
       canonical_code_string.shrink_to_fit();
     }
     else if (it->second == NULL)
     {
-      //cerr<<"here4\n";
       if(cur->children_nodes->size())
       { 
         cerr<<"cur pad delete, children number: "<<cur->children_nodes->size()<<"\n";
@@ -775,7 +737,6 @@ int Hologram::roll_out(searchtreenode* cur,
     }
     else
     {
-      //cerr<<"here5\n";
       //fine the connection to current node
       auto tmp_it = parent->children_nodes->find(lastExt);
       // delete it
@@ -786,6 +747,7 @@ int Hologram::roll_out(searchtreenode* cur,
       if(cur->children_nodes->size())
       { 
         cerr<<"cur pad delete, children number: "<<cur->children_nodes->size()<<"\n";
+        exit(1);
       }
 
       delete_tree_node (cur);
@@ -797,13 +759,6 @@ int Hologram::roll_out(searchtreenode* cur,
     }
     canonicalTick += clock() - firstTickTracker;
   }
-  //cerr<<"here6\n";
-  //cerr<<"de: "<<de<<endl;
-  //if(de > 20)
-  //  return 0;
-  // if this is the first time we go into this node "of it's not in the first level of the rool out"
-  //if(!cur->occ_list_is_computed)
-  //{
   // Object with map of possible extensions
   GExtensionCollect extCollect( minFreq, current_class_id );
   // Object that store pattern and occurences
@@ -811,32 +766,25 @@ int Hologram::roll_out(searchtreenode* cur,
   // Clear occurence list before searching new occurency as pPattern should
   // already be stored in GVocab.
   subGraphIso.clearOccList();
-  /* Number of sparse set (i.e. number of graphs in which first edge of pattern
-  * is frequent */
+  
   int my_last = -1;
   /// this is the most expensive part of the code!
-  //cerr<<"-------\n";
 
-  //bool del = 0;
-  int nbGraphSparse = tokenData.v_SparseOcc.size();
-  for ( int iGraph = 0 ; iGraph < nbGraphSparse; iGraph++ )
+  int nbGraphOccurrencesList = tokenData.v_OccurrencesList.size();
+  for ( int iGraph = 0 ; iGraph < nbGraphOccurrencesList; iGraph++ )
   {
-     
-    // For each sparseset
-    // As the sparse set is modified, just create copy for the FOR LOOP
-    
-    GSparseSet SparseOccTmp = tokenData.v_SparseOcc.at(iGraph);
+    GOccurrencesList occurrencesListTmp = tokenData.v_OccurrencesList.at(iGraph);
     
     // Get domain size
-    for ( uint idx = 0; idx < uint(SparseOccTmp.size()) ; idx++ )
+    for ( uint idx = 0; idx < uint(occurrencesListTmp.size()) ; idx++ )
     {
       
-      GSparseSet::mapEdge mEdge = SparseOccTmp.at(idx);
+      GOccurrencesList::mapEdge mEdge = occurrencesListTmp.at(idx);
       // Find if this edge wear an occurence of the pattern
       firstTickTracker = clock();
 
       
-      bool findOcc = subGraphIso.run( SparseOccTmp.pGraph,
+      bool findOcc = subGraphIso.run( occurrencesListTmp.pGraph,
                                       mEdge.nodeFrom,
                                       mEdge.edgeId   );
       subgraphisoTick += clock() - firstTickTracker;
@@ -854,63 +802,59 @@ int Hologram::roll_out(searchtreenode* cur,
           // Increment frequency counter to 1
           currentFreq++;
           // Get graph ID of this occurence
-          lastOccGraphID    = SparseOccTmp.graphID;
-          lastOccGraphMemId = SparseOccTmp.pGraph;
+          lastOccGraphID    = occurrencesListTmp.graphID;
+          lastOccGraphMemId = occurrencesListTmp.pGraph;
 
         }
-        else if ( lastOccGraphID != SparseOccTmp.graphID
-                  && lastOccGraphMemId == SparseOccTmp.pGraph )
+        else if ( lastOccGraphID != occurrencesListTmp.graphID
+                  && lastOccGraphMemId == occurrencesListTmp.pGraph )
         {
-          cerr << "ERROR - Error While managing graphID in sparseset" << endl;
+          cerr << "ERROR - Error While managing graphID in occurrences list" << endl;
+          exit(1);
         }
-        else if ( lastOccGraphID != SparseOccTmp.graphID
-                  && lastOccGraphMemId != SparseOccTmp.pGraph )
+        else if ( lastOccGraphID != occurrencesListTmp.graphID
+                  && lastOccGraphMemId != occurrencesListTmp.pGraph )
         {
           // If last occurence was in another graph
           // Increment frequency counter
           currentFreq++;
           // Get graph ID of this occurence
-          lastOccGraphID    = SparseOccTmp.graphID;
-          lastOccGraphMemId = SparseOccTmp.pGraph;
+          lastOccGraphID    = occurrencesListTmp.graphID;
+          lastOccGraphMemId = occurrencesListTmp.pGraph;
         }
         else if(iGraph != my_last)
           currentFreq++;
         // Compute all extension of this occurence
         firstTickTracker = clock();
-        subGraphIso.current_occurrence_class_id = SparseOccTmp.pGraph->classID;
+        subGraphIso.current_occurrence_class_id = occurrencesListTmp.pGraph->classID;
         extCollect.process( subGraphIso );
         extensionTick += clock() - firstTickTracker;
         my_last = iGraph;
       }
       else
       {
-        // If edge does not wear pattern "Remove" edge from domain in the sparse set
-        tokenData.v_SparseOcc.at(iGraph).remove(mEdge) ;
-        //if(!(de%100))
-       // cerr<<"*";
-        //del = 1;
+        // If edge does not wear pattern "Remove" edge from domain in the occurrences list
+        tokenData.v_OccurrencesList.at(iGraph).remove(mEdge) ;
       }
     }
 
-    tokenData.v_SparseOcc.at(iGraph).data.shrink_to_fit();
+    tokenData.v_OccurrencesList.at(iGraph).data.shrink_to_fit();
 
   }
  
 
-  for ( int iGraph = 0 ; iGraph < int(tokenData.v_SparseOcc.size()) ; iGraph++ )
+  for ( int iGraph = 0 ; iGraph < int(tokenData.v_OccurrencesList.size()) ; iGraph++ )
   {
-    if (tokenData.v_SparseOcc[iGraph].size() == 0)
+    if (tokenData.v_OccurrencesList[iGraph].size() == 0)
     {
-      tokenData.v_SparseOcc[iGraph] = tokenData.v_SparseOcc.back();
-      tokenData.v_SparseOcc.pop_back();
+      tokenData.v_OccurrencesList[iGraph] = tokenData.v_OccurrencesList.back();
+      tokenData.v_OccurrencesList.pop_back();
       --iGraph;
     }
   }
 
-  tokenData.v_SparseOcc.shrink_to_fit();
-  //cerr<<"here7\n";
-  //if(del)
-  //  cerr<<"\n";
+  tokenData.v_OccurrencesList.shrink_to_fit();
+
   if(rollout_first_level)
   {
   // save the occ list in the node
@@ -923,9 +867,6 @@ int Hologram::roll_out(searchtreenode* cur,
   /////////////////////////////////////////////////////
 
   mappingExtTick += extCollect.mapExtTick;
-
-  //cerr<<"L: "<<de<<endl; 
-  
 
   if ( currentFreq != suppData.frequency )
   {
@@ -965,9 +906,7 @@ int Hologram::roll_out(searchtreenode* cur,
   
   double cur_Q = WRAcc(tokenData,current_class_id,currentFreq);
   delta += cur_Q;
-  //cerr<<"here8\n";
-  // save hthe pattern
-  //cerr<<"start add, nplimit: "<<PARAM.NBPATLIMIT<<"\n";
+
   bool add_pattern = false;
   if( int(pattern_buffer_set.size()) < PARAM.NBPATLIMIT  )
   {
@@ -1005,8 +944,7 @@ int Hologram::roll_out(searchtreenode* cur,
     tmp_string.clear();
     tmp_string.shrink_to_fit();
   }
-  //cerr<<"end add\n";
-  //cerr<<"here13\n";
+
   /********************* store the possible expansions ********************/
   vector<pair<GToken, GExtensionData> > tmp_vec;
 
@@ -1035,33 +973,9 @@ int Hologram::roll_out(searchtreenode* cur,
     cur->valid_extenstions = tmp_vec;
   }
 
-  //cerr<<lastExt;
-  //if(!(de%100) || de < 10)
-  if( 0 && de > 100 )
-    cerr<<"L: "<<de<<" B: "<< tmp_vec.size()
-    <<" Memory: "<<tokenData.size()<<" Frequancy: "<<currentFreq
-    <<" Occ: "<<nbOcc<<endl;
-  //cerr.flush();
+  // debuging usage only
   roll_depth = max(roll_depth,de);
-  if(0)
-  {
-    cerr<<pPattern;
-    cerr<<"possible expansions:\n";
-    for(int i=0; i < int(tmp_vec.size()) ; ++i )
-      cerr<<tmp_vec[i].first;
-    cerr<<"--------------------\n";
-    print(tokenData);
-  }
-  //cerr.flush();
-  
-  //}
-  // if it's not the first time we visite this node: restore the occ list from the node
-  //else{
-  //  cerr<<"get the saved data\n";
-  //  tokenData = GTokenData(cur->node_tokenData);
-  //  cerr<<"valid expansions size: "<<cur->valid_extenstions.size()<<endl;
- // }
-  
+
 
   if(tmp_vec.size() == 0 )
   {
@@ -1071,7 +985,6 @@ int Hologram::roll_out(searchtreenode* cur,
     roll_depth--;
     de--;
     return 0;
-    //wot?
   }
   ++roll_depth;
   ++de;
@@ -1103,8 +1016,6 @@ void Hologram::update_ancestors(searchtreenode* cur, double _delta)
     return;
   
   cur->Q = (cur->N_node*cur->Q+_delta)/max(1,cur->N_node+1);
-  if(cur->Q < -1e9)
-    cerr<<"very low quality2\n";
   cur->N_node = cur->N_node+1;
   
   if (cur->parents.size() == 0)
@@ -1120,9 +1031,6 @@ void Hologram::update_ancestors(searchtreenode* cur, double _delta)
 
 void Hologram::delete_tree_node(searchtreenode* cur)
 {
-  // delete connections from paretns
-  //cerr<<"start deleting "<<cur<<"\n";
-
   for(auto dad : cur->parents)
   {
     vector< map<GToken, searchtreenode*, GTokenGt>::iterator > it_vec;
@@ -1157,24 +1065,19 @@ void Hologram::delete_tree_node(searchtreenode* cur)
     {
       if(it->second->parents[i] == cur)
       {
-        //cerr<<"DELDEL\n";
         it->second->parents[i] = it->second->parents.back();
         it->second->parents.pop_back();
       }
     }
   }
-  //cerr<<"deleting\n";
-  
+    
   // delete node
   delete cur;
-  //cerr<<"end deleting\n";  
 }
 
 void Hologram::clean()
 {
-  //cerr<<"here00\n";
   unordered_map< string , searchtreenode* >::iterator it = nodes_pointers.begin();
-  //cerr<<"here0\n";
   for(it = nodes_pointers.begin();
       it != nodes_pointers.end(); it++)
   {

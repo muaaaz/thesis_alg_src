@@ -8,6 +8,8 @@
  *   Copyright (C) 2014 by Romain Deville                                  *
  *   romain.deville[at]insa-lyon.fr                                        *
  * ----------------------------------------------------------------------- *
+ *   Copyright (C) 2018 by Muaz Twaty                                      *
+ *   muaz.sy123[at]gmail.com                                               *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -27,8 +29,8 @@
  ***************************************************************************/
 
 //================================= IFDEF ====================================//
-#ifndef HSPARSESET_HPP
-#define HSPARSESET_HPP
+#ifndef HOCCURRENCESLIST_HPP
+#define HOCCURRENCESLIST_HPP
 
 //================================ INCLUDE ===================================//
 // Include library class
@@ -48,10 +50,10 @@ using namespace std;
 
 //================================= CLASS ====================================//
 /**
- * @brief The SparseSet class
+ * @brief The OCCURRENCES LIST class
  * Class that will managed occurence of pattern without having to duplicate it
  */
-class GSparseSet
+class GOccurrencesList
 {
   //---- PUBLIC --------------------------------------------------------------//
 public:
@@ -83,17 +85,12 @@ public:
   GGraph *pGraph;
 
   /// Default constructor
-  GSparseSet();
+  GOccurrencesList();
 
-  /**
-   * @brief GSparseSet
-   * Overloaded constructor
-   * @param graphId : Id of the graph to which is associated the sparseset
-   */
-  GSparseSet( uint graphId, GGraph *p_Graph );
+  GOccurrencesList( uint graphId, GGraph *p_Graph );
 
   /// Default destructor
-  ~GSparseSet();
+  ~GOccurrencesList();
 
   int size()
   {
@@ -198,4 +195,4 @@ private:
 
 //============================== OPERATOR OVERLOAD  ==========================//
 //================================= END IFDEF ================================//
-#endif // SPARSESET_HPP
+#endif // HOCCURRENCESLIST_HPP

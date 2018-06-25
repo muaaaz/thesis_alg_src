@@ -1,13 +1,7 @@
 /***************************************************************************
- *   Copyright (C) 2005 by Siegfried Nijssen                               *
- *   snijssen@informatik.uni-freiburg.de                                   *
- * ----------------------------------------------------------------------- *
- *   Copyright (C) 2010,2011 by Adriana Prado and Baptiste Jeudy           *
- *   baptiste.jeudy at univ-st-etienne fr                                  *
- * ----------------------------------------------------------------------- *
- *   Copyright (C) 2015 by Romain Deville                                  *
- *   romain.deville[at]insa-lyon.fr                                        *
- *                                                                         *
+ *   Copyright (C) 2018 by Muaz Twaty                                      *
+ *   muaz.sy123[at]gmail.com                                              
+ * 
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
  *   the Free Software Foundation; either version 2 of the License, or     *

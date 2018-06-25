@@ -1,13 +1,7 @@
 /***************************************************************************
- *   Copyright (C) 2005 by Siegfried Nijssen                               *
- *   snijssen@informatik.uni-freiburg.de                                   *
- * ----------------------------------------------------------------------- *
- *   Copyright (C) 2010,2011 by Adriana Prado and Baptiste Jeudy           *
- *   baptiste.jeudy at univ-st-etienne fr                                  *
- * ----------------------------------------------------------------------- *
- *   Copyright (C) 2015 by Romain Deville                                  *
- *   romain.deville[at]insa-lyon.fr                                        *
- *                                                                         *
+ *   Copyright (C) 2018 by Muaz Twaty                                      *
+ *   muaz.sy123[at]gmail.com                                              
+ * 
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
  *   the Free Software Foundation; either version 2 of the License, or     *
@@ -102,22 +96,13 @@ searchtreenode::~searchtreenode()
    * Copy Desc
    */
 
-  //for(int i=0;i<node_tokenData.v_SparseOcc.size();++i){
-  //  node_tokenData.v_SparseOcc[i].v_Domain.clear();
-  //  node_tokenData.v_SparseOcc[i].v_Domain.shrink_to_fit();
-  //  node_tokenData.v_SparseOcc[i].v_Map.clear();
-  //  node_tokenData.v_SparseOcc[i].v_Map.shrink_to_fit();
-  //  //delete node_tokenData.v_SparseOcc[i].pGraph;
-  //}
-
-
-  for(int i=0;i < int(node_tokenData.v_SparseOcc.size());++i)
+  for(int i=0;i < int(node_tokenData.v_OccurrencesList.size());++i)
   {
-    node_tokenData.v_SparseOcc[i].clear();
+    node_tokenData.v_OccurrencesList[i].clear();
   }
   
-  node_tokenData.v_SparseOcc.clear();
-  node_tokenData.v_SparseOcc.shrink_to_fit();
+  node_tokenData.v_OccurrencesList.clear();
+  node_tokenData.v_OccurrencesList.shrink_to_fit();
   valid_extenstions.clear();
   valid_extenstions.shrink_to_fit();
   parents.clear();

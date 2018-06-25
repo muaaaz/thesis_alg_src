@@ -8,6 +8,8 @@
  *   Copyright (C) 2014 by Romain Deville                                  *
  *   romain.deville[a]insa-lyon.fr                                         *
  * ----------------------------------------------------------------------- *
+ *   Copyright (C) 2018 by Muaz Twaty                                      *
+ *   muaz.sy123[at]gmail.com                                               *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -31,7 +33,7 @@
 #include <iostream>
 #include <ostream>
 // Include project class
-#include "gsparseset.hpp"
+#include "goccurrenceslist.hpp"
 
 //=============================== NAMESPACE ==================================//
 using namespace std;
@@ -42,37 +44,32 @@ using namespace std;
 //---- PUBLIC ----------------------------------------------------------------//
 // Public CONSTANTS __________________________________________________________//
 // Public Constructor/Desctructor ____________________________________________//
-GSparseSet::GSparseSet():
+GOccurrencesList::GOccurrencesList():
   graphID(0)
 {
   // Default Constructor
   data.resize(0);
 }
-// End of HSparseSet::SparseSet()
+// End of GOccurrencesList::GOccurrencesList()
 
-GSparseSet::GSparseSet(uint graphId , GGraph *p_Graph)
+GOccurrencesList::GOccurrencesList(uint graphId , GGraph *p_Graph)
 {
-  /**
-   * @brief GSparseSet
-   * Overloaded constructor
-   * @param graphId : Id of the graph to which is associated the sparseset
-   */
   pGraph  = p_Graph;
   graphID = graphId;
   data.resize(0);
 }
-// End of GSparseSet::GSparseSet( uint graph ):
+// End of GOccurrencesList::GOccurrencesList( uint graph ):
 
-GSparseSet::~GSparseSet()
+GOccurrencesList::~GOccurrencesList()
 {
   /// Default destructor
   data.clear();
   data.shrink_to_fit();
 }
-// End of GSparseSet::~GSparseSet()
+// End of GOccurrencesList::~GOccurrencesList()
 
 // Accessor __________________________________________________________________//
-GSparseSet::mapEdge GSparseSet::at( uint i )
+GOccurrencesList::mapEdge GOccurrencesList::at( uint i )
 {
   /*
    * @brief atMat
@@ -83,16 +80,16 @@ GSparseSet::mapEdge GSparseSet::at( uint i )
    */
   return data.at(i);
 }
-// End of GSparseSet::atMat( uint i )
+// End of GOccurrencesList::atMat( uint i )
 
-// End of GSparseSet::atDom( uint i )
+// End of GOccurrencesList::atDom( uint i )
 
 // Mutator ___________________________________________________________________//
 
-// End of GSparseSet::setSize( uint newSize )
+// End of GOccurrencesList::setSize( uint newSize )
 
 // Public Methods ____________________________________________________________//
-void GSparseSet::add( mapEdge edge )
+void GOccurrencesList::add( mapEdge edge )
 {
   /*
    * TODO : RD
@@ -103,9 +100,9 @@ void GSparseSet::add( mapEdge edge )
   data.push_back( edge );
   // update size
 }
-// End of GSparseSet::add( mapEdge edge )
+// End of GOccurrencesList::add( mapEdge edge )
 
-void GSparseSet::add( GNodeID from, GNodeID dest, GEdgeID edge )
+void GOccurrencesList::add( GNodeID from, GNodeID dest, GEdgeID edge )
 {
   /*
    * TODO : RD
@@ -124,7 +121,7 @@ void GSparseSet::add( GNodeID from, GNodeID dest, GEdgeID edge )
 // End of add(GNodeID from, GNodeID dest, GEdgeID edge )
 
 
-void GSparseSet::remove( mapEdge e )
+void GOccurrencesList::remove( mapEdge e )
 {
   /*
    * TODO : RD
@@ -137,9 +134,9 @@ void GSparseSet::remove( mapEdge e )
     data.pop_back();
   }
 }
-// End of GSparseSet::remove( mapEdge e )
+// End of GOccurrencesList::remove( mapEdge e )
 
-void GSparseSet::remove( uint i )
+void GOccurrencesList::remove( uint i )
 {
   /*
    * TODO : RD
@@ -151,7 +148,7 @@ void GSparseSet::remove( uint i )
     data.pop_back();
   }
 }
-// End of GSparseSet::remove( int i )
+// End of GOccurrencesList::remove( int i )
 
 //---- PROTECTED  ------------------------------------------------------------//
 // Protected CONSTANTS _______________________________________________________//
@@ -160,7 +157,7 @@ void GSparseSet::remove( uint i )
 //---- PRIVATE ---------------------------------------------------------------//
 // Private CONSTANTS _________________________________________________________//
 // Private Methods ___________________________________________________________//
-int GSparseSet::find( mapEdge e )
+int GOccurrencesList::find( mapEdge e )
 {
   /*
    * TODO : RD
@@ -175,9 +172,9 @@ int GSparseSet::find( mapEdge e )
   // If not find, return -1
   return -1;
 }
-// End of GSparseSet::find( mapEdge e )
+// End of GOccurrencesList::find( mapEdge e )
 
-void GSparseSet::swap( uint i, uint j )
+void GOccurrencesList::swap( uint i, uint j )
 {
   /*
    * TODO : RD
@@ -188,9 +185,9 @@ void GSparseSet::swap( uint i, uint j )
   data[j] =  mapEdge(tmp);
 
 }
-// End of GSparseSet::swap( uint i, uint j )
+// End of GOccurrencesList::swap( uint i, uint j )
 
-void GSparseSet::swap( mapEdge ei, mapEdge ej )
+void GOccurrencesList::swap( mapEdge ei, mapEdge ej )
 {
   /*
    * TODO : RD
@@ -201,7 +198,7 @@ void GSparseSet::swap( mapEdge ei, mapEdge ej )
   swap( i, j );
 }
 
-void GSparseSet::clear()
+void GOccurrencesList::clear()
 {
   /*
    * TODO : RD

@@ -150,7 +150,7 @@ public:
   float minF;
   GClassDB* pClassDB;
 
-  unordered_map< string , searchtreenode* > nodes_pointers;
+  unordered_map< string , Searchtreenode* > nodes_pointers;
 
   unordered_map< string , bool > class_patterns;
 
@@ -158,7 +158,7 @@ public:
   
   set<Pattern_buffer> pattern_buffer_set;
 
-  map<long long, searchtreenode*> search_tree_nodes;
+  map<long long, Searchtreenode*> search_tree_nodes;
 
   double delta;
   int N_delta;
@@ -168,7 +168,7 @@ public:
   int number_of_classes;
   int number_of_graphs;
 
-  searchtreenode* last_father;
+  Searchtreenode* last_father;
 
   int roll_depth;
 
@@ -176,7 +176,7 @@ public:
 
   int current_class_id;
 
-  searchtreenode* root;
+  Searchtreenode* root;
 
   long long nodes_counter;
   // Public Structure & Typedef ______________________________________________//
@@ -226,20 +226,20 @@ public:
 
   void unbuffer_class_patterns();
 
-  inline double UCB(searchtreenode* cur, searchtreenode* child);
+  inline double UCB(Searchtreenode* cur, Searchtreenode* child);
 
-  searchtreenode* best_child(searchtreenode* cur,GToken& ext);
+  Searchtreenode* best_child(Searchtreenode* cur,GToken& ext);
 
-  searchtreenode* select(searchtreenode* cur);
+  Searchtreenode* select(Searchtreenode* cur);
 
-  searchtreenode* expand(searchtreenode* cur,GToken& ext,GExtensionData& tmp);
+  Searchtreenode* expand(Searchtreenode* cur,GToken& ext,GExtensionData& tmp);
 
-  void add_parent(searchtreenode* cur,searchtreenode* parent,const GToken& lastExt);
+  void add_parent(Searchtreenode* cur,Searchtreenode* parent,const GToken& lastExt);
 
-  void build_pattern(searchtreenode* selcted_node, GPattern* pPattern);
+  void build_pattern(Searchtreenode* selcted_node, GPattern* pPattern);
 
-  int roll_out( searchtreenode* cur, 
-                searchtreenode* parent,
+  int roll_out( Searchtreenode* cur, 
+                Searchtreenode* parent,
                 bool rollout_first_level,
                 const vector<GGraph*>& v_Graphs,
                 const GGlobFreq       minFreq,    //Mininmum global frequency
@@ -249,15 +249,15 @@ public:
                 GExtensionData  &suppData,   // Tmp variable, supposed frequency
                 GExtensionData  &prevData);
 
-  void update_ancestors(searchtreenode* cur, double delta); 
+  void update_ancestors(Searchtreenode* cur, double delta); 
 
   double WRAcc(GTokenData& tokenData,int classID,int support); 
 
-  void delete_tree_node(searchtreenode* cur);
+  void delete_tree_node(Searchtreenode* cur);
 
   void clean();
 
-  void delete_search_subtree(searchtreenode* cur);
+  void delete_search_subtree(Searchtreenode* cur);
   //---- PROTECTED  ----------------------------------------------------------//
 protected:
   // Protected CONSTANTS _____________________________________________________//

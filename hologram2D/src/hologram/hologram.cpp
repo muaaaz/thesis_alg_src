@@ -355,7 +355,7 @@ int Hologram::search( vector<GGraph*>                   &v_Graphs,
    * Copy Desc
    */
 
-  root = new searchtreenode();
+  root = new Searchtreenode();
   root->N_node = 1;
   root->nodeID = nodes_counter++;
   
@@ -400,7 +400,7 @@ int Hologram::search( vector<GGraph*>                   &v_Graphs,
 
     // the father of the selected node:
     last_father = NULL;
-    searchtreenode* selcted_node = select(root);
+    Searchtreenode* selcted_node = select(root);
     
     if(selcted_node == NULL)
     {
@@ -446,7 +446,7 @@ int Hologram::search( vector<GGraph*>                   &v_Graphs,
     GToken ext;
     GExtensionData tmp_GExtensionData;
     // expand the node and save the edge that has been added
-    searchtreenode* exp_node = expand(selcted_node,ext,tmp_GExtensionData);
+    Searchtreenode* exp_node = expand(selcted_node,ext,tmp_GExtensionData);
     
     // if the node has no expansions, mark it as fully expanded, it could be deleted next iteration
     if(exp_node == NULL)
@@ -525,22 +525,22 @@ int Hologram::search( vector<GGraph*>                   &v_Graphs,
 //                       GGlobFreq                         minFreq )
 
 
-inline double Hologram::UCB(searchtreenode* cur, searchtreenode* child)
+inline double Hologram::UCB(Searchtreenode* cur, Searchtreenode* child)
 {
   double ret = child->Q + 2 * PARAM.C_p * sqrt( 2 * log(double(cur->N_node)) / double(child->N_node)  );
   return ret;
 }
 
-searchtreenode* Hologram::best_child(searchtreenode* cur,GToken& ext)
+Searchtreenode* Hologram::best_child(Searchtreenode* cur,GToken& ext)
 {
 
     //this function will return the a pointer to the best child of the current MCTS node
-    map< GToken ,searchtreenode*, GTokenGt>::iterator it;
+    map< GToken ,Searchtreenode*, GTokenGt>::iterator it;
     it = cur->children_nodes->begin();
 
     double cur_UCB = UCB(cur,it->second);
     double mx_UCB = cur_UCB;
-    searchtreenode* ret = it->second;
+    Searchtreenode* ret = it->second;
     ext = it->first;
     
     it++;
@@ -559,7 +559,7 @@ searchtreenode* Hologram::best_child(searchtreenode* cur,GToken& ext)
     return ret;
 }
 
-searchtreenode* Hologram::select(searchtreenode* cur)
+Searchtreenode* Hologram::select(Searchtreenode* cur)
 {
   int mx_depth = int(1e6);
   int cc = 1;
@@ -601,7 +601,7 @@ searchtreenode* Hologram::select(searchtreenode* cur)
 
 // we we want to expand a node we expect that teh node has it valid_extenstions ready but not all the children_nodes
 
-searchtreenode* Hologram::expand(searchtreenode* cur,GToken& ext,GExtensionData& tmp)
+Searchtreenode* Hologram::expand(Searchtreenode* cur,GToken& ext,GExtensionData& tmp)
 {
   
   if(cur->valid_extenstions.size() == 0){
@@ -623,7 +623,7 @@ searchtreenode* Hologram::expand(searchtreenode* cur,GToken& ext,GExtensionData&
     cur->valid_extenstions.shrink_to_fit();
   }
 
-  searchtreenode* new_child = new searchtreenode(cur,ext,nodes_counter++);
+  Searchtreenode* new_child = new Searchtreenode(cur,ext,nodes_counter++);
   return new_child;
 }
 
@@ -659,7 +659,7 @@ double Hologram::WRAcc(GTokenData& tokenData,int classID,int support)
   
 }
 
-void Hologram::add_parent(searchtreenode* old, searchtreenode* parent,const GToken& lastExt)
+void Hologram::add_parent(Searchtreenode* old, Searchtreenode* parent,const GToken& lastExt)
 {
 
   if( parent->children_nodes->find(lastExt) != parent->children_nodes->end() )
@@ -673,7 +673,7 @@ void Hologram::add_parent(searchtreenode* old, searchtreenode* parent,const GTok
   
 }
 
-void Hologram::build_pattern(searchtreenode* selcted_node, GPattern* pPattern)
+void Hologram::build_pattern(Searchtreenode* selcted_node, GPattern* pPattern)
 {
   stack<GToken> token_stack;
   while (selcted_node->parents.size() > 0)
@@ -688,8 +688,8 @@ void Hologram::build_pattern(searchtreenode* selcted_node, GPattern* pPattern)
   }
 }
 
-int Hologram::roll_out(searchtreenode* cur,
-                        searchtreenode* parent,
+int Hologram::roll_out(Searchtreenode* cur,
+                        Searchtreenode* parent,
                         bool rollout_first_level,
                         const vector<GGraph*>& v_Graphs,
                         const GGlobFreq       minFreq,    //Mininmum global frequency
@@ -1010,7 +1010,7 @@ int Hologram::roll_out(searchtreenode* cur,
   return ret;
 }
 
-void Hologram::update_ancestors(searchtreenode* cur, double _delta)
+void Hologram::update_ancestors(Searchtreenode* cur, double _delta)
 { 
   if(cur == NULL )
     return;
@@ -1029,11 +1029,11 @@ void Hologram::update_ancestors(searchtreenode* cur, double _delta)
   }
 }
 
-void Hologram::delete_tree_node(searchtreenode* cur)
+void Hologram::delete_tree_node(Searchtreenode* cur)
 {
   for(auto dad : cur->parents)
   {
-    vector< map<GToken, searchtreenode*, GTokenGt>::iterator > it_vec;
+    vector< map<GToken, Searchtreenode*, GTokenGt>::iterator > it_vec;
     for(auto it = dad->children_nodes->begin() ; 
         it != dad->children_nodes->end() ;
         it++)
@@ -1077,7 +1077,7 @@ void Hologram::delete_tree_node(searchtreenode* cur)
 
 void Hologram::clean()
 {
-  unordered_map< string , searchtreenode* >::iterator it = nodes_pointers.begin();
+  unordered_map< string , Searchtreenode* >::iterator it = nodes_pointers.begin();
   for(it = nodes_pointers.begin();
       it != nodes_pointers.end(); it++)
   {
@@ -1095,10 +1095,10 @@ void Hologram::clean()
  
 }
 
-void Hologram::delete_search_subtree(searchtreenode* cur)
+void Hologram::delete_search_subtree(Searchtreenode* cur)
 {
 
-  map< GToken ,searchtreenode*, GTokenGt>::iterator it;
+  map< GToken ,Searchtreenode*, GTokenGt>::iterator it;
 
   for(it = cur->children_nodes->begin();
       it != cur->children_nodes->end() ;it++)

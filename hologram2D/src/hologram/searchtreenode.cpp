@@ -48,8 +48,8 @@ using namespace std;
 // Public Constructor/Desctructor ____________________________________________//
 
 
-searchtreenode::searchtreenode():
-  parents(vector<searchtreenode*>(0,0)),
+Searchtreenode::Searchtreenode():
+  parents(vector<Searchtreenode*>(0,0)),
   N_node(1),
   Q(0),
   is_fully_expanded(false),
@@ -60,14 +60,14 @@ searchtreenode::searchtreenode():
    * Copy Desc
    */
   parents.clear();
-  children_nodes    = new map<GToken, searchtreenode*,     GTokenGt>();
+  children_nodes    = new map<GToken, Searchtreenode*,     GTokenGt>();
   valid_extenstions = vector<pair<GToken, GExtensionData> > ();
   children_nodes->clear();
   valid_extenstions.clear();
 }
 
-searchtreenode::searchtreenode(searchtreenode* _parent_,GToken ext,long long ID):
-  parents(vector<searchtreenode*>(0,0)),
+Searchtreenode::Searchtreenode(Searchtreenode* _parent_,GToken ext,long long ID):
+  parents(vector<Searchtreenode*>(0,0)),
   N_node(1),
   Q(0),
   is_fully_expanded(false),
@@ -81,7 +81,7 @@ searchtreenode::searchtreenode(searchtreenode* _parent_,GToken ext,long long ID)
    */
   parents.clear();
   parents.push_back(_parent_);
-  children_nodes    = new map<GToken, searchtreenode*,     GTokenGt>();
+  children_nodes    = new map<GToken, Searchtreenode*,     GTokenGt>();
   valid_extenstions = vector<pair<GToken, GExtensionData> > ();
   children_nodes->clear();
   valid_extenstions.clear();
@@ -89,7 +89,7 @@ searchtreenode::searchtreenode(searchtreenode* _parent_,GToken ext,long long ID)
 
 
 
-searchtreenode::~searchtreenode()
+Searchtreenode::~Searchtreenode()
 {
   /*
    * TODO : RD

@@ -224,6 +224,29 @@ public:
    */
   void saveData( );
 
+  void clean();
+
+  //---- PROTECTED  ----------------------------------------------------------//
+protected:
+  // Protected CONSTANTS _____________________________________________________//
+  // Protected Structure & Typedef ___________________________________________//
+  // Protected Variables _____________________________________________________//
+  // Protected Methods _______________________________________________________//
+
+  //---- PRIVATE -------------------------------------------------------------//
+private:
+  // Private CONSTANTS _______________________________________________________//
+  // Private Structure & Typedef _____________________________________________//
+  // Private Variables _______________________________________________________//
+  // Private Methods _________________________________________________________//
+  /**
+   * TODO : RD
+   * Write Desc
+   */
+  int search( vector<GGraph*>                   &v_Graphs,
+              map<GToken, GTokenData, GTokenGt> &m_TokenData,
+              GGlobFreq                         minFreq);
+
   void unbuffer_class_patterns();
 
   inline double UCB(Searchtreenode* cur, Searchtreenode* child);
@@ -255,30 +278,7 @@ public:
 
   void delete_tree_node(Searchtreenode* cur);
 
-  void clean();
-
   void delete_search_subtree(Searchtreenode* cur);
-  //---- PROTECTED  ----------------------------------------------------------//
-protected:
-  // Protected CONSTANTS _____________________________________________________//
-  // Protected Structure & Typedef ___________________________________________//
-  // Protected Variables _____________________________________________________//
-  // Protected Methods _______________________________________________________//
-
-  //---- PRIVATE -------------------------------------------------------------//
-private:
-  // Private CONSTANTS _______________________________________________________//
-  // Private Structure & Typedef _____________________________________________//
-  // Private Variables _______________________________________________________//
-  // Private Methods _________________________________________________________//
-  /**
-   * TODO : RD
-   * Write Desc
-   */
-  int search( vector<GGraph*>                   &v_Graphs,
-              map<GToken, GTokenData, GTokenGt> &m_TokenData,
-              GGlobFreq                         minFreq);
-
   
 };
 

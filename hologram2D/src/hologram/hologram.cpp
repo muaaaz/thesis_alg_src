@@ -58,9 +58,67 @@ GToken tmpT2 = GToken();
 // debuging use only
 int de_arr[10000];
 int sel_arr[10000];
-
 int de = 0;
 int roll_depth = 0;
+
+// void print(vector<int> vec)
+// {
+//   for(int i=0;i< int(vec.size());i++)
+//     cout<<vec[i]<<' ';
+//   cout<<endl;
+// }
+
+// void print(GTokenData ob)
+// {
+//   for ( int i=0; i < int(ob.v_OccurrencesList.size()) ; ++i)
+//   {
+    
+//     if(!ob.v_OccurrencesList.at(i).size())
+//       continue;
+//     cerr<<"G "<<ob.v_OccurrencesList.at(i).graphID<<" C "<<ob.v_OccurrencesList.at(i).pGraph->classID<<":\n";
+//     GOccurrencesList occurrencesListTmp = ob.v_OccurrencesList.at(i);
+//     uint domainSize = occurrencesListTmp.size();
+
+//     for ( uint iDom = 0; iDom < domainSize  ; iDom++ )
+//     {
+//       GOccurrencesList::mapEdge mEdge = occurrencesListTmp.at(iDom);
+//       cerr<<mEdge.nodeFrom<<' '<<mEdge.nodeDest<<endl;
+//     }
+    
+//   }
+// }
+
+// void print( map<GToken, GTokenData, GTokenGt> &m_TokenData)
+// {
+
+//   map<GToken, GTokenData, GTokenGt>::iterator it = m_TokenData.begin();
+  
+//   while(it != m_TokenData.end())
+//   {
+//     cerr<<"token: "<<it->first.nodeLabelFrom<<' '<<it->first.nodeLabelDest<<'\n';//<<it->second.v_OccurrencesList.size()<<" :\n";
+//     print(it->second);
+//     it++;
+//   }
+// }
+
+// void print_report()
+// {
+//   cerr<<"de_arr; \n"; 
+//   for(int i=0;i<10000;++i)
+//     if(de_arr[i])
+//       cerr<<i<<' '<<de_arr[i]<<endl;
+//   cerr<<endl;
+  
+//   cerr<<"sel_arr; \n";
+//   for(int i=0;i<10000;++i)
+//     if(sel_arr[i])
+//       cerr<<i<<' '<<sel_arr[i]<<endl;
+//   cerr<<endl;
+// }
+
+
+////// END of debugging stuff //////
+
 //================================= CLASS ====================================//
 //---- PUBLIC ----------------------------------------------------------------//
 // Public CONSTANTS __________________________________________________________//
@@ -150,12 +208,7 @@ void Hologram::initialize( )
 //===========================================================================//
 //                                   MAIN                                    //
 //===========================================================================//
-void print(vector<int> vec)
-{
-  for(int i=0;i< int(vec.size());i++)
-    cout<<vec[i]<<' ';
-  cout<<endl;
-}
+
 
 int Hologram::processMining( )
 {
@@ -298,53 +351,6 @@ void Hologram::unbuffer_class_patterns()
   vocabPattern->v_PatternByClass.push_back( v_PatternCurrClass );
 }
 
-void print(GTokenData ob)
-{
-  for ( int i=0; i < int(ob.v_OccurrencesList.size()) ; ++i)
-  {
-    
-    if(!ob.v_OccurrencesList.at(i).size())
-      continue;
-    cerr<<"G "<<ob.v_OccurrencesList.at(i).graphID<<" C "<<ob.v_OccurrencesList.at(i).pGraph->classID<<":\n";
-    GOccurrencesList occurrencesListTmp = ob.v_OccurrencesList.at(i);
-    uint domainSize = occurrencesListTmp.size();
-
-    for ( uint iDom = 0; iDom < domainSize  ; iDom++ )
-    {
-      GOccurrencesList::mapEdge mEdge = occurrencesListTmp.at(iDom);
-      cerr<<mEdge.nodeFrom<<' '<<mEdge.nodeDest<<endl;
-    }
-    
-  }
-}
-
-void print( map<GToken, GTokenData, GTokenGt> &m_TokenData)
-{
-
-  map<GToken, GTokenData, GTokenGt>::iterator it = m_TokenData.begin();
-  
-  while(it != m_TokenData.end())
-  {
-    cerr<<"token: "<<it->first.nodeLabelFrom<<' '<<it->first.nodeLabelDest<<'\n';//<<it->second.v_OccurrencesList.size()<<" :\n";
-    print(it->second);
-    it++;
-  }
-}
-
-void print_report()
-{
-  cerr<<"de_arr; \n"; 
-  for(int i=0;i<10000;++i)
-    if(de_arr[i])
-      cerr<<i<<' '<<de_arr[i]<<endl;
-  cerr<<endl;
-  
-  cerr<<"sel_arr; \n";
-  for(int i=0;i<10000;++i)
-    if(sel_arr[i])
-      cerr<<i<<' '<<sel_arr[i]<<endl;
-  cerr<<endl;
-}
 
 int Hologram::search( vector<GGraph*>                   &v_Graphs,
                    map<GToken, GTokenData, GTokenGt> &m_TokenData,
@@ -387,7 +393,7 @@ int Hologram::search( vector<GGraph*>                   &v_Graphs,
   // the main loop
   while(true)
   {
-    if( (clock() - firstTick ) / CLOCKS_PER_SEC >= (round( PARAM.TIMEOUT*60 / number_of_classes ) ) )
+    if( (clock() - firstTick ) / CLOCKS_PER_SEC >= (round( PARAM.TIMEOUT*60 / double(number_of_classes) ) ) )
     {
       cerr<<"Time budget has finished\n";
       break;
@@ -578,9 +584,9 @@ Searchtreenode* Hologram::select(Searchtreenode* cur)
     }
     
     // debigging use only
-    de++;
+    ++de;
     ++sel_arr[cc];
-    cc++;
+    ++cc;
     
     // save the edge added to get the best child
     GToken ext;
@@ -629,7 +635,7 @@ Searchtreenode* Hologram::expand(Searchtreenode* cur,GToken& ext,GExtensionData&
 
 double Hologram::WRAcc(GTokenData& tokenData,int classID,int support)
 {
-
+  // RAND:
   //return double(rand()%100) / double(100);
 
   double p_d = 0;
@@ -877,7 +883,7 @@ int Hologram::roll_out(Searchtreenode* cur,
     cerr << "# Suppose occ  : " << suppData.nbOcc     << endl;
     cerr << pPattern;
     cerr << endl;
-    print(tokenData);
+    //print(tokenData);
     exit( EXIT_FAILURE ); 
   }
   if ( nbOcc != suppData.nbOcc && pPattern->v_Tokens.at(0).angle > 0  )

@@ -293,7 +293,7 @@ param PARAM = param();
 
 // ./hologram2D -o /udd/mtwaty/Downloads/thesis_alg_src/hologram2D/output -T 1 -f 0.5 in.gri
 
-int incremental_counter = 0;
+int incremental_counter = 1;
 
 int main( int argc, char **argv )
 {

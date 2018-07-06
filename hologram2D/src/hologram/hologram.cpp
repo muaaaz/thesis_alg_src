@@ -651,9 +651,9 @@ double Hologram::WRAcc(GTokenData& tokenData,int classID,int support)
 
   p_d /= double(max(1,support));
   
-  double p = class_count[classID] / number_of_graphs;
+  double p = class_count[classID] / double(number_of_graphs);
 
-  double ret = ( support * (p_d - p) ) / number_of_graphs;
+  double ret = ( support * (p_d - p) ) / double(number_of_graphs);
   
   //RAcc:
   //double ret = p_d - p;
@@ -661,6 +661,8 @@ double Hologram::WRAcc(GTokenData& tokenData,int classID,int support)
   //LOG WRAcc:
   //double ret = log( 1 + double(support) / double(number_of_graphs) ) * (p_d - p)   ;
   
+  //normalize the evaluation
+  ret = (ret + 0.25) * 2;
   return ret;
   
 }

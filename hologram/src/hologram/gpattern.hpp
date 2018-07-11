@@ -8,6 +8,8 @@
  *   Copyright (C) 2014 by Romain Deville                                  *
  *   romain.deville[at]insa-lyon.fr                                        *
  * ----------------------------------------------------------------------- *
+ *   Copyright (C) 2018 by Muaz Twaty                                      *
+ *   muaz.sy123[at]gmail.com                                               *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -27,144 +29,102 @@
  ***************************************************************************/
 
 //================================= IFDEF ====================================//
-#ifndef HSPARSESET_HPP
-#define HSPARSESET_HPP
+#ifndef GRIMAPATTERN_HPP
+#define GRIMAPATTERN_HPP
 
 //================================ INCLUDE ===================================//
 // Include library class
-#include <vector>
-//#include <array>
-//#include <map>
-//#include <unistd.h>
 // Include project class
-#include "gglobal.hpp"
+#include "ggraph.hpp"
+#include "gdatabase.hpp"
+
+//#include "../holeG/hgrimagraph.hpp"
 //#include "../holeG/hgrimagraphecode.hpp"
 
 //=============================== NAMESPACE ==================================//
-using namespace std;
 //============================ STRUCT & TYPEDEF ==============================//
 //=============================== VARIABLES ==================================//
 //================================ METHODS ===================================//
 
 //================================= CLASS ====================================//
 /**
- * @brief The SparseSet class
- * Class that will managed occurence of pattern without having to duplicate it
+ * @brief The GPattern class
+ * Class that inherite from GGraphCode the list of token (i.e. DFS code)
+ * and allow to manage patterns.
  */
-class GSparseSet
+class GPattern
 {
   //---- PUBLIC --------------------------------------------------------------//
 public:
   // Public CONSTANTS ________________________________________________________//
   // Public Structure & Typedef ______________________________________________//
-  /// Structure that define an edge store in map
-  struct mapEdge {
-    GNodeID nodeFrom;
-    GNodeID nodeDest;
-    GEdgeID edgeId;
-    uint    element;
-  };
+  // Public Variables ________________________________________________________//
+  vector<GToken> v_Tokens;
+  /// The graph code, maintained by push_back and pop_back
+  GGraph * pGraph;
+  /** List of occurrences of current pattern
+    * Such that :
+    * First  : Graph tid
+    * Second : List of GNodeID that wear the pattern */
+  vector<GNodeID> *v_OccList;
+  /// Min time coord
+  int minTCoord;
+  /// Max time coord
+  int maxTCoord;
+  /// Node that handle minTCoord
+  GNodeID nodeMinTCoord;
+  /// Node that handle maxTCoord
+  GNodeID nodeMaxTCoord;
 
-  /// Domain that store element
-  vector<uint>    v_Domain;
-  /// Map that store value of the element
-  vector<mapEdge> v_Map;
-  /// Size of unremoved domain
-  uint size;
-  /// Ggraph ID
-  uint graphID;
-  /// Graph Memory ID
-  GGraph *pGraph;
-
-
+  // Public Constructor/Desctructor __________________________________________//
   /// Default constructor
-  GSparseSet();
+  GPattern();
 
-  /**
-   * @brief GSparseSet
-   * Overloaded constructor
-   * @param graphId : Id of the graph to which is associated the sparseset
-   */
-  GSparseSet( uint graphId, GGraph *p_Graph );
-
-  /// Default destructor
-  ~GSparseSet();
-
+  GPattern(GPattern* pat);
+  /// Destructor
+  ~GPattern();
 
   // Accessor ________________________________________________________________//
-  /**
-   * TODO : RD
-   * Write desc
-   */
-  mapEdge atMap( uint i );
+  // Mutator _________________________________________________________________//
+  // Public Methods __________________________________________________________//
+  void read( GReader *data, vector<string> &v_Token);
 
   /**
-   * TODO : RD
-   * Write desc
+   * @brief push_back
+   * Add an extension to the pattern, update graph and code
+   * If extension allow to complete pattern, then add backward edge, s.t :
+   *
+   *    B          A--B             A--B
+   *    | + A--B =    |   => Hence  |  |  where A->A is the first edges
+   * A->A          A->A             A->A
+   *
+   * @param v_Ext : Code extension to add
    */
-  uint atDom( uint i );
+  void push_back(const GToken &v_Ext , bool canonTest );
 
-  // Mutator _______________________________________________________________//
-  /**
-   * TODO : RD
-   * Write desc
-   */
-  void setSize( uint newSize );
-
-  // Public Methods _________________________________________________________//
-  /**
-   * TODO : RD
-   * Write desc
-   */
-  void add( mapEdge edge );
 
   /**
-   * TODO : RD
-   * Write Desc
+   * @brief pop_back
+   * Remove last extension(s) from the pattern. Undo what was done in last
+   * push_back. If backward edge was added, then it's removed.
    */
-  void add( GNodeID from, GNodeID dest, GEdgeID edge );
+  void pop_back( bool canonTest );
 
   /**
-   * TODO : RD
-   * Write Desc
+   * @brief isCanonincal
+   * Test if pattern code is canonical
+   * @return TRUE if Pattern is canonical, FALSE if it's not.
    */
-  void remove( mapEdge e );
+  bool isCanonincal();
 
-  /**
-   * TODO : RD
-   * Write Desc
-   */
-  void remove( uint i );
+  GPattern* getCanonincalPattern();
 
+  string token_to_string(GToken token);
 
-  //  bool contains( mapEdge e )
-  //  {
-  //    /*
-  //       * Function that return search if mapEdge object is in the domain,
-  //       * if not return -1
-  //       * else
-  //       *   check if element in domain is before size, and return result.
-  //       */
+  string getCanonincalString();
+  
+  void printOcc();
 
-  //    int idx = find (e);
-  //    if ( idx != -1 )
-  //      return v_Map[idx].element < size;
-  //    else
-  //      return false;
-  //  }
-  //  // End of contains( mapEdge e )
-
-  //  bool contains(uint element)
-  //  {
-  //    /*
-  //       * Function that check if element is in active domain, ie if element
-  //       * position is less than size.
-  //       */
-
-  //    return v_Map[v_Domain[element]].element < size ;
-
-  //  }
-  //  // End of contains(sparseElement element)
 
   //---- PROTECTED  ----------------------------------------------------------//
 protected:
@@ -179,25 +139,50 @@ private:
   // Private Variables _______________________________________________________//
   // Private Methods _________________________________________________________//
   /**
-   * TODO : RD
-   * Write desc
+   * @brief setup
+   * Method call by push_back for the first token. Clean node in pGraph, add the
+   * two first nodes and edge between this of the pattern based on token.
+   * @param token : DFS Code of the first edge.
    */
-  int find( mapEdge e );
+  void setup( const GToken &token );
 
   /**
    * TODO : RD
-   * Write Desc
    */
-  void swap( uint i, uint j );
-
-  /**
-   * TODO : RD
-   * Write desc
-   */
-  void swap( mapEdge ei, mapEdge ej );
-
+  int findNotTemporalToken( GNodeID patNodeFrom );
 };
 
 //============================== OPERATOR OVERLOAD  ==========================//
+struct GpatComptLt
+{
+  bool operator()( const GPattern *pat1, const GPattern *pat2 )
+  {
+    uint minSize = min( pat1->v_Tokens.size(), pat2->v_Tokens.size() );
+    uint i = 0;
+    int cmp = 0;
+
+    while ( i < minSize )
+    {
+      cmp = cmpGTokenCanonTest( pat1->v_Tokens.at(i), pat2->v_Tokens.at(i) );
+      if ( cmp > 0 )
+        return true;
+      else if ( cmp < 0 )
+        return false;
+      else
+        i++;
+    }
+    if ( pat1->v_Tokens.size() > pat2->v_Tokens.size() )
+      return true;
+    else
+      return false;
+  }
+};
+
+ostream& operator<<(ostream& stream, GToken token );
+
+ostream& operator<<(ostream& stream, vector<GToken> v_Tokens );
+
+ostream& operator<<(ostream& stream, GPattern *pPattern );
+
 //================================= END IFDEF ================================//
-#endif // SPARSESET_HPP
+#endif // GPATTERN_HPP

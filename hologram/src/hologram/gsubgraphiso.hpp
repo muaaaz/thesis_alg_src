@@ -61,6 +61,8 @@ public:
   /// Number of node of pattern
   uint patternNbNode;
 
+
+  int current_occurrence_class_id;
   /**
    * Integer to store offset in list v_OccList to know from where to put
    * nodes id in the large graph that are isomorph to pattern

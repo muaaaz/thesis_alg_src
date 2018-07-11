@@ -87,6 +87,11 @@ struct param {
   bool TEMP_FIRST;
   bool SPAT_FIRST;
 
+  //MCTS
+  //
+  double C_p;
+
+
   param():
     INFILE(""),
     OUTDIR(""),
@@ -110,7 +115,9 @@ struct param {
     WARNING_MODE(false),
     MAXLBL(-1),
     TEMP_FIRST(false),
-    SPAT_FIRST(false)
+    SPAT_FIRST(false),
+    C_p(1/sqrt(2))
+
   {
     // Nothing to put here
   }

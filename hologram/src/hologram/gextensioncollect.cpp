@@ -50,9 +50,10 @@ bool sortListExt(pair<GToken,GExtensionData> p1, pair<GToken,GExtensionData> p2 
 //---- PUBLIC --------------------------------------------------------------//
 // Public CONSTANTS ________________________________________________________//
 // Public Constructor/Desctructor __________________________________________//
-GExtensionCollect::GExtensionCollect( GGlobFreq minFG ):
+GExtensionCollect::GExtensionCollect( GGlobFreq minFG, int ID):
   minFreqG( minFG ),
-  mapExtTick(0)
+  mapExtTick(0),
+  current_class_id(ID)
 {
   // Default Constructor
   // Nothing to do here
@@ -63,6 +64,7 @@ GExtensionCollect::~GExtensionCollect()
 {
   // Default Destructor
   m_Extensions.clear();
+  
 }
 // End of GExtensionCollect::~GExtensionCollect()
 
@@ -161,6 +163,12 @@ void GExtensionCollect::process( GSubgraphIso &subGraphIso )
           /* If the extension does not exist yet, thus just added in
            * the map */
           ext.first->second.frequency = 1 ;
+
+          if(current_class_id == subGraphIso.current_occurrence_class_id )
+            ext.first->second.current_class_frequency = 1 ;
+          else
+            ext.first->second.current_class_frequency = 0 ;
+
           ext.first->second.nbOcc = 1 ;
           ext.first->second.tId = (GTid) subGraphIso.largeGraph;
           ext.first->second.v_Graphs.push_back( (GTid) subGraphIso.largeGraph );
@@ -182,6 +190,9 @@ void GExtensionCollect::process( GSubgraphIso &subGraphIso )
           {
             ext.first->second.tId = (GTid) subGraphIso.largeGraph;
             ext.first->second.frequency++;
+            if(current_class_id == subGraphIso.current_occurrence_class_id )
+              ext.first->second.current_class_frequency++ ;
+          
             ext.first->second.v_Graphs.push_back( (GTid) subGraphIso.largeGraph );
 
           }
@@ -208,6 +219,12 @@ void GExtensionCollect::process( GSubgraphIso &subGraphIso )
           /* If the extension does not exist yet, thus just added in
            * the map */
           ext.first->second.frequency = 1 ;
+        
+          if(current_class_id == subGraphIso.current_occurrence_class_id )
+            ext.first->second.current_class_frequency = 1 ;
+          else
+            ext.first->second.current_class_frequency = 0 ;
+
           ext.first->second.nbOcc = 1 ;
           ext.first->second.tId = (GTid) subGraphIso.largeGraph;
           ext.first->second.v_Graphs.push_back( (GTid) subGraphIso.largeGraph );
@@ -229,6 +246,9 @@ void GExtensionCollect::process( GSubgraphIso &subGraphIso )
           {
             ext.first->second.tId = (GTid) subGraphIso.largeGraph;
             ext.first->second.frequency++;
+            if(current_class_id == subGraphIso.current_occurrence_class_id )
+              ext.first->second.current_class_frequency++;
+          
             ext.first->second.v_Graphs.push_back( (GTid) subGraphIso.largeGraph );
 
           }
@@ -436,7 +456,7 @@ void GExtensionCollect::getListExtensionSpatFirst(
   GNodeID nodeJ;
   GGraphEdge edge;
 
-  for ( uint iEdge = v_Edges.size()-1 ; iEdge != -1 ; iEdge--)
+  for ( int iEdge = v_Edges.size()-1 ; iEdge != -1 ; iEdge--)
   {
     // For each edge from nodeLargeI
     /* Get the next possible edge (nodeLargeI,nodeLargeJ) in the

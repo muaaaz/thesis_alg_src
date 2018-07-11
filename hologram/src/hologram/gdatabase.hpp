@@ -8,6 +8,9 @@
  *   Copyright (C) 2016 by Romain Deville                                  *
  *   romain.deville[at]insa-lyon.fr                                        *
  * ----------------------------------------------------------------------- *
+ *   Copyright (C) 2018 by Muaz Twaty                                      *
+ *   muaz.sy123[at]gmail.com                                               *
+ *                                                                         *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -39,7 +42,7 @@
 #include "gglobal.hpp"
 #include "greader.hpp"
 #include "ggraph.hpp"
-#include "gsparseset.hpp"
+#include "goccurrenceslist.hpp"
 
 //=============================== NAMESPACE ==================================//
 //============================ STRUCT & TYPEDEF ==============================//
@@ -136,11 +139,39 @@ struct GTokenGt {
  * TODO : RD
  * Write Desc
  */
+
 struct GTokenData {
-  /// List of all occurence through a vector of sparseset, one sparset per grid
-  vector<GSparseSet> v_SparseOcc;
+  /// List of all occurence
+  vector<GOccurrencesList> v_OccurrencesList;
+  
   /// Absolute frequency of edge ( <= that the number of graph )
+  int size()
+  {
+    int ret = 0;
+    for ( int i=0; i < int(v_OccurrencesList.size()) ;++i)
+      ret += v_OccurrencesList[i].data.size();
+    
+    return ret;
+  }
   uint               freq;
+  int get_class_freq(int ID)
+  {
+    int ret = 0;
+    for(auto it : v_OccurrencesList)
+    {
+      if( it.data.size() > 0 && it.pGraph->classID == ID )
+        ret++;
+    }
+
+    return ret;
+  }
+
+};
+
+struct D_GTokenData {
+  
+  GTokenData token;
+  vector<bool> is_difference_v;
 };
 
 /**
@@ -154,10 +185,15 @@ struct GClassDB {
   vector<GGraph*> v_ClassGraphs;
   /// List of all 1-edge canonical DFS code occure
   map<GToken,GTokenData,GTokenGt> m_TokenData;
-
+  
+  int number_of_classes;
+  int number_of_graphs;
+  vector<int> class_count;
   /// Default constructor
   GClassDB():
-    className("")
+    className(""),
+    number_of_classes(0),
+    number_of_graphs(0)
   {
     v_ClassGraphs.resize(0);
   }
@@ -190,6 +226,7 @@ public:
   // Public Variables_________________________________________________________//
   /// Vector of GClassDB object, ie each class with their graph
   vector<GClassDB*> v_GClassDB;
+  vector<string> v_ClassName;
 
   // Public Constructor/Desctructor __________________________________________//
   /// Default constructor
@@ -253,7 +290,7 @@ private:
    * TODO : RD
    * Write Desc
    */
-  void processSparseSet( GClassDB *pClassDB );
+  void processOccurrencesList( GClassDB *pClassDB );
 
   /**
    * TODO : RD

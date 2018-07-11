@@ -27,95 +27,74 @@
  ***************************************************************************/
 
 //================================= IFDEF ====================================//
-#ifndef GRIMAPATTERN_HPP
-#define GRIMAPATTERN_HPP
+#ifndef GRIMAEXTENSIONCOLLECT_HPP
+#define GRIMAEXTENSIONCOLLECT_HPP
 
 //================================ INCLUDE ===================================//
 // Include library class
+#include <map>
+#include <list>
+#include <cmath>
 // Include project class
-#include "ggraph.hpp"
-#include "gdatabase.hpp"
-
-//#include "../holeG/hgrimagraph.hpp"
+#include "gpattern.hpp"
+#include "gsubgraphiso.hpp"
 //#include "../holeG/hgrimagraphecode.hpp"
 
 //=============================== NAMESPACE ==================================//
 //============================ STRUCT & TYPEDEF ==============================//
+/**
+ * @brief The GExtensionData struct
+ * Structure that store information about possible extension
+ */
+struct GExtensionData {
+  /// Frequency of extension
+  GGlobFreq frequency;
+  int current_class_frequency;
+  /// Vector that store graph were occurency
+  vector<GTid>    v_Graphs;
+  vector<GNodeID> v_OccList;
+  /// Number of occurences of the extension
+  GGlobFreq nbOcc;
+  /// Graph ID to know when we change graph for frequency computing
+  GTid  tId; // used to count the frequency correctly
+};
+
 //=============================== VARIABLES ==================================//
 //================================ METHODS ===================================//
-
 //================================= CLASS ====================================//
 /**
- * @brief The GPattern class
- * Class that inherite from GGraphCode the list of token (i.e. DFS code)
- * and allow to manage patterns.
+ * @brief The GExtensionCollect class
+ * Class that compute all possible extension from a subgraph, check if these
+ * extension are valids
  */
-class GPattern
+class GExtensionCollect
 {
   //---- PUBLIC --------------------------------------------------------------//
 public:
   // Public CONSTANTS ________________________________________________________//
   // Public Structure & Typedef ______________________________________________//
   // Public Variables ________________________________________________________//
-  vector<GToken> v_Tokens;
-  /// The graph code, maintained by push_back and pop_back
-  GGraph * pGraph;
-  /** List of occurrences of current pattern
-    * Such that :
-    * First  : Graph tid
-    * Second : List of GNodeID that wear the pattern */
-  vector<GNodeID> *v_OccList;
-  /// Min time coord
-  int minTCoord;
-  /// Max time coord
-  int maxTCoord;
-  /// Node that handle minTCoord
-  GNodeID nodeMinTCoord;
-  /// Node that handle maxTCoord
-  GNodeID nodeMaxTCoord;
-
+  /// Map that store all possible extension and their code
+  map<GToken,GExtensionData,GTokenGt> m_Extensions;
+  /// Minimum global threshold
+  GGlobFreq minFreqG;
+  clock_t mapExtTick;
+  int current_class_id;
   // Public Constructor/Desctructor __________________________________________//
   /// Default constructor
-  GPattern();
-  /// Destructor
-  ~GPattern();
+  GExtensionCollect( GGlobFreq minFG , int ID);
+
+  /// Desctructor
+  ~GExtensionCollect();
 
   // Accessor ________________________________________________________________//
   // Mutator _________________________________________________________________//
   // Public Methods __________________________________________________________//
-  void read( GReader *data, vector<string> &v_Token);
-
   /**
-   * @brief push_back
-   * Add an extension to the pattern, update graph and code
-   * If extension allow to complete pattern, then add backward edge, s.t :
-   *
-   *    B          A--B             A--B
-   *    | + A--B =    |   => Hence  |  |  where A->A is the first edges
-   * A->A          A->A             A->A
-   *
-   * @param v_Ext : Code extension to add
+   * TODO : RD
+   * Write desc
    */
-  void push_back(const GToken &v_Ext , bool canonTest );
-
-
-  /**
-   * @brief pop_back
-   * Remove last extension(s) from the pattern. Undo what was done in last
-   * push_back. If backward edge was added, then it's removed.
-   */
-  void pop_back( bool canonTest );
-
-  /**
-   * @brief isCanonincal
-   * Test if pattern code is canonical
-   * @return TRUE if Pattern is canonical, FALSE if it's not.
-   */
-  bool isCanonincal();
-
-
-  void printOcc();
-
+  void process( GSubgraphIso &subGraphIso );
 
   //---- PROTECTED  ----------------------------------------------------------//
 protected:
@@ -129,51 +108,48 @@ private:
   // Private Structure _______________________________________________________//
   // Private Variables _______________________________________________________//
   // Private Methods _________________________________________________________//
-  /**
-   * @brief setup
-   * Method call by push_back for the first token. Clean node in pGraph, add the
-   * two first nodes and edge between this of the pattern based on token.
-   * @param token : DFS Code of the first edge.
-   */
-  void setup( const GToken &token );
+  void getListExtension(
+      vector<GGraphEdge> &v_Edges,
+      vector<GGraphNode> &v_LargeNodes,
+      pair<GToken,GExtensionData> &p_NewExt,
+      vector<GGraphNode> &v_PatternNodes,
+      GSubgraphIso &subGraphIso,
+      GNodeID nodeLargeI,
+      GNodeID nodeLargeJ,
+      uint prevEdgeFrom,
+      uint iNode,
+      GPattern *pPattern,
+      list< pair<GToken, GExtensionData> > &lp_ExtList );
 
-  /**
-   * TODO : RD
-   */
-  int findNotTemporalToken( GNodeID patNodeFrom );
+  void getListExtensionTempFirst(vector<GGraphEdge> v_Edges,
+                                 vector<GGraphNode> &v_LargeNodes ,
+                                 pair<GToken, GExtensionData> p_NewExt,
+                                 vector<GGraphNode> &v_PatternNodes,
+                                 GSubgraphIso &subGraphIso,
+                                 GNodeID nodeLargeI,
+                                 GNodeID nodeLargeJ,
+                                 uint prevEdgeFrom,
+                                 uint iNode,
+                                 GPattern *pPattern,
+                                 list< pair<GToken, GExtensionData> > &lp_ExtList
+                                 );
+
+  void getListExtensionSpatFirst( vector<GGraphEdge> v_Edges,
+                                  vector<GGraphNode> &v_LargeNodes ,
+                                  pair<GToken, GExtensionData> p_NewExt,
+                                  vector<GGraphNode> &v_PatternNodes,
+                                  GSubgraphIso &subGraphIso,
+                                  GNodeID nodeLargeI,
+                                  GNodeID nodeLargeJ,
+                                  uint prevEdgeFrom,
+                                  uint iNode,
+                                  GPattern *pPattern,
+                                  list< pair<GToken, GExtensionData> > &lp_ExtList
+                                  );
+
+
 };
 
 //============================== OPERATOR OVERLOAD  ==========================//
-struct GpatComptLt
-{
-  bool operator()( const GPattern *pat1, const GPattern *pat2 )
-  {
-    uint minSize = min( pat1->v_Tokens.size(), pat2->v_Tokens.size() );
-    uint i = 0;
-    int cmp = 0;
-
-    while ( i < minSize )
-    {
-      cmp = cmpGTokenCanonTest( pat1->v_Tokens.at(i), pat2->v_Tokens.at(i) );
-      if ( cmp > 0 )
-        return true;
-      else if ( cmp < 0 )
-        return false;
-      else
-        i++;
-    }
-    if ( pat1->v_Tokens.size() > pat2->v_Tokens.size() )
-      return true;
-    else
-      return false;
-  }
-};
-
-ostream& operator<<(ostream& stream, GToken token );
-
-ostream& operator<<(ostream& stream, vector<GToken> v_Tokens );
-
-ostream& operator<<(ostream& stream, GPattern *pPattern );
-
 //================================= END IFDEF ================================//
-#endif // GPATTERN_HPP
+#endif // GEXTENSIONCOLLECT_HPP

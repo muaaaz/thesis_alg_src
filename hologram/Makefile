@@ -1,5 +1,6 @@
+
 ### Programe name
-NAME = grima
+NAME = hologram
 BIN  = bin/$(NAME)
 DATE = $(shell date +'%y.%m.%d-%H.%M.%S')
 

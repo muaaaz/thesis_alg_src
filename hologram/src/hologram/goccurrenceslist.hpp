@@ -8,6 +8,8 @@
  *   Copyright (C) 2014 by Romain Deville                                  *
  *   romain.deville[at]insa-lyon.fr                                        *
  * ----------------------------------------------------------------------- *
+ *   Copyright (C) 2018 by Muaz Twaty                                      *
+ *   muaz.sy123[at]gmail.com                                               *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -27,73 +29,137 @@
  ***************************************************************************/
 
 //================================= IFDEF ====================================//
-#ifndef GRIMAEXTENSIONCOLLECT_HPP
-#define GRIMAEXTENSIONCOLLECT_HPP
+#ifndef HOCCURRENCESLIST_HPP
+#define HOCCURRENCESLIST_HPP
 
 //================================ INCLUDE ===================================//
 // Include library class
-#include <map>
-#include <list>
-#include <cmath>
+#include <vector>
+//#include <array>
+//#include <map>
+//#include <unistd.h>
 // Include project class
-#include "gpattern.hpp"
-#include "gsubgraphiso.hpp"
+#include "gglobal.hpp"
 //#include "../holeG/hgrimagraphecode.hpp"
 
 //=============================== NAMESPACE ==================================//
+using namespace std;
 //============================ STRUCT & TYPEDEF ==============================//
-/**
- * @brief The GExtensionData struct
- * Structure that store information about possible extension
- */
-struct GExtensionData {
-  /// Frequency of extension
-  GGlobFreq frequency;
-  /// Vector that store graph were occurency
-  vector<GTid>    v_Graphs;
-  vector<GNodeID> v_OccList;
-  /// Number of occurences of the extension
-  GGlobFreq nbOcc;
-  /// Graph ID to know when we change graph for frequency computing
-  GTid  tId; // used to count the frequency correctly
-};
-
 //=============================== VARIABLES ==================================//
 //================================ METHODS ===================================//
+
 //================================= CLASS ====================================//
 /**
- * @brief The GExtensionCollect class
- * Class that compute all possible extension from a subgraph, check if these
- * extension are valids
+ * @brief The OCCURRENCES LIST class
+ * Class that will managed occurence of pattern without having to duplicate it
  */
-class GExtensionCollect
+class GOccurrencesList
 {
   //---- PUBLIC --------------------------------------------------------------//
 public:
   // Public CONSTANTS ________________________________________________________//
   // Public Structure & Typedef ______________________________________________//
-  // Public Variables ________________________________________________________//
-  /// Map that store all possible extension and their code
-  map<GToken,GExtensionData,GTokenGt> m_Extensions;
-  /// Minimum global threshold
-  GGlobFreq minFreqG;
-  clock_t mapExtTick;
+  /// Structure that define an edge store in map
+  struct mapEdge {
+    GNodeID nodeFrom;
+    GNodeID nodeDest;
+    GEdgeID edgeId;
+    uint    element;
+    bool operator == (const mapEdge ob) const {
+      return nodeFrom == ob.nodeFrom &&
+             nodeDest == ob.nodeDest &&
+             edgeId   == ob.edgeId &&
+             element  == ob.element ;
+             
+    }
+  };
 
-  // Public Constructor/Desctructor __________________________________________//
+  /// Domain that store element
+  //vector<uint>    v_Domain;
+  /// Map that store value of the element
+  vector<mapEdge> data;
+  /// Size of unremoved domain
+  /// Ggraph ID
+  uint graphID;
+  /// Graph Memory ID
+  GGraph *pGraph;
+
   /// Default constructor
-  GExtensionCollect( GGlobFreq minFG );
+  GOccurrencesList();
 
-  /// Desctructor
-  ~GExtensionCollect();
+  GOccurrencesList( uint graphId, GGraph *p_Graph );
 
+  /// Default destructor
+  ~GOccurrencesList();
+
+  int size()
+  {
+    return data.size();
+  }
   // Accessor ________________________________________________________________//
-  // Mutator _________________________________________________________________//
-  // Public Methods __________________________________________________________//
   /**
    * TODO : RD
    * Write desc
    */
-  void process( GSubgraphIso &subGraphIso );
+  mapEdge at( uint i );
+
+
+  // Public Methods _________________________________________________________//
+  /**
+   * TODO : RD
+   * Write desc
+   */
+  void add( mapEdge edge );
+
+  /**
+   * TODO : RD
+   * Write Desc
+   */
+  void add( GNodeID from, GNodeID dest, GEdgeID edge );
+
+  /**
+   * TODO : RD
+   * Write Desc
+   */
+  void remove( mapEdge e );
+
+  /**
+   * TODO : RD
+   * Write Desc
+   */
+  void remove( uint i );
+
+
+  void clear();
+
+  //  bool contains( mapEdge e )
+  //  {
+  //    /*
+  //       * Function that return search if mapEdge object is in the domain,
+  //       * if not return -1
+  //       * else
+  //       *   check if element in domain is before size, and return result.
+  //       */
+
+  //    int idx = find (e);
+  //    if ( idx != -1 )
+  //      return v_Map[idx].element < size;
+  //    else
+  //      return false;
+  //  }
+  //  // End of contains( mapEdge e )
+
+  //  bool contains(uint element)
+  //  {
+  //    /*
+  //       * Function that check if element is in active domain, ie if element
+  //       * position is less than size.
+  //       */
+
+  //    return v_Map[v_Domain[element]].element < size ;
+
+  //  }
+  //  // End of contains(sparseElement element)
 
   //---- PROTECTED  ----------------------------------------------------------//
 protected:
@@ -107,48 +173,26 @@ private:
   // Private Structure _______________________________________________________//
   // Private Variables _______________________________________________________//
   // Private Methods _________________________________________________________//
-  void getListExtension(
-      vector<GGraphEdge> &v_Edges,
-      vector<GGraphNode> &v_LargeNodes,
-      pair<GToken,GExtensionData> &p_NewExt,
-      vector<GGraphNode> &v_PatternNodes,
-      GSubgraphIso &subGraphIso,
-      GNodeID nodeLargeI,
-      GNodeID nodeLargeJ,
-      uint prevEdgeFrom,
-      uint iNode,
-      GPattern *pPattern,
-      list< pair<GToken, GExtensionData> > &lp_ExtList );
+  /**
+   * TODO : RD
+   * Write desc
+   */
+  int find( mapEdge e );
 
-  void getListExtensionTempFirst(vector<GGraphEdge> v_Edges,
-                                 vector<GGraphNode> &v_LargeNodes ,
-                                 pair<GToken, GExtensionData> p_NewExt,
-                                 vector<GGraphNode> &v_PatternNodes,
-                                 GSubgraphIso &subGraphIso,
-                                 GNodeID nodeLargeI,
-                                 GNodeID nodeLargeJ,
-                                 uint prevEdgeFrom,
-                                 uint iNode,
-                                 GPattern *pPattern,
-                                 list< pair<GToken, GExtensionData> > &lp_ExtList
-                                 );
+  /**
+   * TODO : RD
+   * Write Desc
+   */
+  void swap( uint i, uint j );
 
-  void getListExtensionSpatFirst( vector<GGraphEdge> v_Edges,
-                                  vector<GGraphNode> &v_LargeNodes ,
-                                  pair<GToken, GExtensionData> p_NewExt,
-                                  vector<GGraphNode> &v_PatternNodes,
-                                  GSubgraphIso &subGraphIso,
-                                  GNodeID nodeLargeI,
-                                  GNodeID nodeLargeJ,
-                                  uint prevEdgeFrom,
-                                  uint iNode,
-                                  GPattern *pPattern,
-                                  list< pair<GToken, GExtensionData> > &lp_ExtList
-                                  );
-
+  /**
+   * TODO : RD
+   * Write desc
+   */
+  void swap( mapEdge ei, mapEdge ej );
 
 };
 
 //============================== OPERATOR OVERLOAD  ==========================//
 //================================= END IFDEF ================================//
-#endif // GEXTENSIONCOLLECT_HPP
+#endif // HOCCURRENCESLIST_HPP

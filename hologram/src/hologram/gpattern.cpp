@@ -8,7 +8,9 @@
  *   Copyright (C) 2014 by Romain Deville                                  *
  *   romain.deville[at]insa-lyon.fr                                        *
  * ----------------------------------------------------------------------- *
- *                                                                         *
+ *   Copyright (C) 2018 by Muaz Twaty                                      *
+ *   muaz.sy123[at]gmail.com                                               *
+ * 
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
  *   the Free Software Foundation; either version 2 of the License, or     *
@@ -57,13 +59,31 @@ GPattern::GPattern():
   // Set default size of OccList to 100 in order to avoid null pointer
   //v_OccList->resize( 100, GNONODEID );
 }
+
+GPattern::GPattern(GPattern* pat):
+  minTCoord(0),
+  maxTCoord(0),
+  nodeMinTCoord(-1),
+  nodeMaxTCoord(-1)
+{
+  v_Tokens = vector<GToken>(pat->v_Tokens);
+  pGraph    = new GGraph(pat->pGraph);
+  v_OccList = new vector<GNodeID>(*pat->v_OccList);
+  minTCoord = pat->minTCoord;
+  maxTCoord = pat->maxTCoord;
+  nodeMinTCoord = pat->nodeMinTCoord;
+  nodeMaxTCoord = pat->nodeMaxTCoord;
+  
+}
 // End of GPattern::GPattern()
 
 GPattern::~GPattern()
 {
   // Default destructor
   delete pGraph;
-  v_OccList->clear();
+  delete v_OccList;
+  v_Tokens.clear();
+  v_Tokens.shrink_to_fit();
 }
 // End of GPattern::~GPattern()
 
@@ -570,11 +590,63 @@ bool GPattern::isCanonincal()
    * Test if pattern code is canonical
    * @return TRUE if Pattern is canonical, FALSE if it's not.
    */
-  GCanonicalDFSComputer computer( this );
+  GCanonicalDFSComputer computer( this, false );
   bool res = computer.isCanonincal();
   return res;
 }
 // End of GPattern::isCanonincal()
+
+GPattern* GPattern::getCanonincalPattern()
+{
+  /*
+   * @brief isCanonincal
+   * Test if pattern code is canonical
+   * @return TRUE if Pattern is canonical, FALSE if it's not.
+   */
+  GCanonicalDFSComputer computer( this, true );
+  return computer.getCanonincal();
+}
+// End of GPattern::isCanonincal()
+
+string GPattern::token_to_string(GToken ob)
+{
+  string ret = "";
+  ret += to_string(ob.direction);
+  ret += ",";
+  ret += to_string(ob.nodeFrom);
+  ret += ",";
+  ret += to_string(ob.nodeDest);
+  ret += ",";
+  ret += to_string(ob.angle);
+  ret += ",";
+  ret += to_string(ob.nodeLabelFrom);
+  ret += ",";
+  ret += to_string(ob.nodeLabelDest);
+  ret += ",";
+  ret += to_string(ob.edgeLabel);
+  ret += "|";
+  return ret;
+}
+
+string GPattern::getCanonincalString()
+{
+  /*
+   * @brief isCanonincal
+   * Test if pattern code is canonical
+   * @return TRUE if Pattern is canonical, FALSE if it's not.
+   */
+  GCanonicalDFSComputer computer( this, true );
+  GPattern* tmpPat = computer.getCanonincal();
+  vector<GToken>& vec = tmpPat->v_Tokens;
+  string ret = "";
+  for(int i = 0 ; i < int(vec.size()) ; ++i)
+    ret += token_to_string(vec[i]);
+  delete tmpPat;
+  return ret;
+}
+// End of GPattern::isCanonincal()
+
+
 
 void GPattern::printOcc()
 {
@@ -699,4 +771,7 @@ ostream& operator<<(ostream& stream, GToken token )
          << token.nodeLabelDest << ")" << endl;
   return stream;
 }
+
+
+
 // End of ostream& operator<<(ostream& stream, GToken tokens )

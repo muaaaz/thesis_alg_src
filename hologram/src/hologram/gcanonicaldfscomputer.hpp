@@ -8,6 +8,8 @@
  *   Copyright (C) 2014 by Romain Deville                                  *
  *   romain.deville[at]insa-lyon.fr                                        *
  * ----------------------------------------------------------------------- *
+ *   Copyright (C) 2018 by Muaz Twaty                                      *
+ *   muaz.sy123[at]gmail.com                                               *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -136,7 +138,7 @@ public:
   // Public Variables ________________________________________________________//
   // Public Constructor/Desctructor __________________________________________//
   /// Default constructor
-  GCanonicalDFSComputer(GPattern *pPat );
+  GCanonicalDFSComputer(GPattern *pPat, bool _compute_code );
   /// Desctructor
   ~GCanonicalDFSComputer();
 
@@ -155,7 +157,7 @@ public:
    * @return TRUE if pattern is canonical, FALSE else.
    */
   bool isCanonincal();
-
+  GPattern* getCanonincal();
 
   //---- PROTECTED  ----------------------------------------------------------//
 protected:
@@ -172,6 +174,8 @@ private:
   GPattern *pPattern;
   /// A version of the new pattern
   GPattern *pTestNewPat;
+  
+  GPattern *largestNewPat;
   /// A vector of DFSToken with all possible extenstion for the pattern
   vector<GCanonicalToken> v_StackCode;
   /// A vector of DFSToken buffer, used to keep equivalent backward edge added
@@ -192,6 +196,13 @@ private:
   /// Boolean to know if we stop the test because the pattern is not canonical
   bool stop;
 
+  bool largerPatternFound;
+
+  bool cocoboolean ;
+
+  int debug_c;
+
+  bool compute_code;
   // Private Methods _________________________________________________________//
   /**
    * @brief recurse
@@ -209,6 +220,8 @@ private:
   void recurse( GEdgeAngle prevAngle, GNodeID nodeLargeI,
                 GNodeID nodeLargeJ );
 
+  void get_recurse( GEdgeAngle prevAngle, GNodeID nodeLargeI,
+                    GNodeID nodeLargeJ );
   /**
    * @brief subRecurse
    * Methods that will add the greatest extension previously construct from
@@ -223,6 +236,8 @@ private:
    */
   void subRecurse();
 
+
+  void get_subRecurse();
 
 
   GEdgeAngle getTokenAngleValue(uint    prevEdgeFrom,

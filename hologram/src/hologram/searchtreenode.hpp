@@ -1,13 +1,7 @@
 /***************************************************************************
- *   Copyright (C) 2005 by Siegfried Nijssen                               *
- *   snijssen@informatik.uni-freiburg.de                                   *
- * ----------------------------------------------------------------------- *
- *   Copyright (C) 2010,2011 by Adriana Prado and Baptiste Jeudy           *
- *   baptiste.jeudy at univ-st-etienne fr                                  *
- * ----------------------------------------------------------------------- *
- *   Copyright (C) 2015 by Romain Deville                                  *
- *   romain.deville[at]insa-lyon.fr                                        *
- *                                                                         *
+ *   Copyright (C) 2018 by Muaz Twaty                                      *
+ *   muaz.sy123[at]gmail.com                                              
+ * 
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
  *   the Free Software Foundation; either version 2 of the License, or     *
@@ -26,8 +20,8 @@
  ***************************************************************************/
 
 //================================= IFDEF ====================================//
-#ifndef GRIMA_HPP
-#define GRIMA_HPP
+#ifndef MCTS_HPP
+#define MCTS_HPP
 
 //================================ INCLUDE ===================================//
 // Include library class
@@ -49,64 +43,60 @@
 
 //================================= CLASS ====================================//
 /**
- * @brief The G class
- * Class that store vocabulary of pattern and allow to process grima mining
- * algorithm for each class.
+ * @brief The MCTS class
+ * Class that store the information stored in a MCTS tree node
  */
-class Grima
+
+class Searchtreenode
 {
   //---- PUBLIC --------------------------------------------------------------//
 public:
+
   // Public CONSTANTS ________________________________________________________//
   // Public variables ________________________________________________________//
-  /// Vocabulary of pattern
-  GVocab* vocabPattern;
-  /// Vector to store number of pattern for each class
-  vector<int> v_NbPatternByClass;
-  vector<GPattern *> v_PatternCurrClass;
-  vector<int> v_ReturnStatus;
+  /// pointers to parents nodes
+  long long nodeID;
+  vector<Searchtreenode*> parents;
+  // the valise of the N parameter of the MCTS algorithm
+  int N_node;
+  // the value of the Q function "the evaluation function"
+  double Q;
+  //
+  bool is_fully_expanded;
+  //
+  bool occ_list_is_computed;
+  
+  GToken lastExt;
+  
+  // possible extentions
+  map<GToken, Searchtreenode*, GTokenGt>* children_nodes;
+  
+  // occurance lists
+  //GTokenData tokenData;
 
-  /// Vector to class name
-  vector<string> v_ClassName;
-  /// Numb of pattern that belong to all class
-  int nbPatternAllClass;
-  /// Number of closed pattern, i.e. pattern that have over-pattern
-  /// (i.e. pattern with at least one more edge) which have exacly same freq
-  /// and same occurency
-  int nbClosedPat;
-  int nbTotalClosedPat;
-  vector<int> v_nbClosedPatClass;
-  /// Current idx of the class that is mined
-  int currClassIdx;
-  /// Id of the last frequent pattern that will be incremented for each new pattern
-  int freqPatternId;
-  /// First clock tick in case of TIMEOUT Specified
-  clock_t firstTick;
-  /// Total time to mine
-  clock_t totalTick;
-  /// Canonical time
-  clock_t canonicalTick;
-  /// Extension time
-  clock_t mappingExtTick;
-  clock_t extensionTick;
-  /// Subgraphiso time
-  clock_t subgraphisoTick;
+  // remaining coninical extenstions
+  vector<pair<GToken, GExtensionData> > valid_extenstions;
+  GTokenData      node_tokenData;
+
+  
 
   // Public Structure & Typedef ______________________________________________//
   // Public Constructor/Desctructor __________________________________________//
   /**
-   * @brief Grima
+   * @brief MCTS
    * Default constructor
    * Initialize variables and create new GVocab object
    */
-  Grima();
+  Searchtreenode();
+
+  Searchtreenode(Searchtreenode* _parent_,GToken ext,long long ID);
 
   /**
-   * @brief ~G
+   * @brief ~MCTS
    * Default Destructor
    * Free memory by deleting GVocab object and clearing vectors
    */
-  ~Grima();
+  ~Searchtreenode();
 
   // Accessor ________________________________________________________________//
   // Mutator _________________________________________________________________//
@@ -114,26 +104,8 @@ public:
   /**
    * TODO
    */
-  void initNbPatternByClass(vector<GClassDB *> v_GClassDB );
-
-  /**
-   * @brief processMining
-   * Method that apply mining process algorithm by calling search trough all
-   * images withing the same class in pClassDB for a user set min support.
-   * @param minF
-   * @param pClassDB
-   * @param classIdx
-   */
-  int processMining( float minF, GClassDB* pClassDB , int classIdx );
-
-  /**
-   * @brief saveData
-   * TODO
-   * @param filename
-   * @param returnStatus
-   */
-  void saveData(bool timeOutOverride );
-
+  
+  
   //---- PROTECTED  ----------------------------------------------------------//
 protected:
   // Protected CONSTANTS _____________________________________________________//
@@ -151,36 +123,13 @@ private:
    * TODO : RD
    * Write Desc
    */
-  int search( vector<GGraph*>                   &v_Graphs,
-              map<GToken, GTokenData, GTokenGt> &m_TokenData,
-              GGlobFreq                         minFreq,
-              int iClassDB    );
 
-  /**
-   * @brief search
-   * Method recursivly called to mine graph
-   * === First step  : Add extension
-   * === Second step : Check if P is canonical
-   * === Third step  : Compute all possible extension of P
-   * === Fourth step : Output pattern and occurences in output file
-   * === Fifth step  : If pattern is frequent, recursive call, else exit
-   * @param v_Graphs
-   * @param minFreq
-   * @param pPattern
-   * @param lastExt
-   * @param tokenData
-   * @param suppData
-   * @return
-   */
-  int search (vector<GGraph*> &v_Graphs,
-              GGlobFreq       &minFreq,     //Mininmum global frequency
-              GPattern*       pPattern,     //Current pattern
-              const GToken    &lastExt,     //Last extension that will be adde
-              GTokenData      &tokenData,   //Struct with freq,v_TId & sparseset
-              GExtensionData  &suppData,    // Tmp variable, supposed frequency
-              GExtensionData  &prevData , int iClassDB);  // Subgraph data
+  
+  
 };
 
 //============================== OPERATOR OVERLOAD  ==========================//
 //================================= END IFDEF ================================//
-#endif // GRIMA_HPP
+
+
+#endif // MCTS_HPP

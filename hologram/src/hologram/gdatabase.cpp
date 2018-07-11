@@ -8,6 +8,9 @@
  *   Copyright (C) 2016 by Romain Deville                                  *
  *   romain.deville[at]insa-lyon.fr                                        *
  * ----------------------------------------------------------------------- *
+ *   Copyright (C) 2018 by Muaz Twaty                                      *
+ *   muaz.sy123[at]gmail.com                                               *
+ *                                                                         *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -31,10 +34,12 @@
 // -- C++ STL Lib
 #include <fstream>
 #include <algorithm>
+#include <set>
 // Include project class
 #include "../global.hpp"
 #include "gdatabase.hpp"
 
+extern int incremental_counter;
 //=============================== NAMESPACE ==================================//
 //================================ METHODS ===================================//
 //================================= CLASS ====================================//
@@ -54,6 +59,8 @@ GDatabase::~GDatabase()
   for ( uint i = 0; i < v_GClassDB.size(); i++ )
     delete v_GClassDB.at(i);
   v_GClassDB.clear();
+  v_GClassDB.shrink_to_fit();
+  
 }
 // End of GDatabase::~GDatabase()
 
@@ -83,7 +90,8 @@ void GDatabase::createGrapheDB( string &graphFile )
   {
     if ( PARAM.INDIRECT_HOLEMINING || PARAM.DIRECT_HOLEMINING || PARAM.FRAMEHOLE )
       processHoleInGrid( v_GClassDB.at(i) );
-    processSparseSet( v_GClassDB.at(i) );
+    processOccurrencesList( v_GClassDB.at(i) );
+    
   }
 }
 // End of GDatabase::createGrapheDB( string &graphFile, bool hole )
@@ -99,6 +107,7 @@ void GDatabase::read( string filename )
    * @param filename : File path where graph are stored
    * @return A vector of structure that store graph by class with class infos.
    */
+  set<int > classes_numbers;
   if ( PARAM.DEBUG_MODE )
     cout << "#- Parse graphs files." << endl;
 
@@ -108,11 +117,14 @@ void GDatabase::read( string filename )
   vector<string>    v_Tokens;
   GClassDB          *tmpGClassDB = new GClassDB();
   GReader           *data = new GReader( filename );
+  int tmpClassID = 0;
 
   // Read first line of type "t <tId> <tClassName>
   data->getLine( &v_Tokens );
 
   suppGraphID = 0;
+  // classes are 1-indexed
+  tmpGClassDB->class_count.push_back(0);
 
   while ( !data->finished() )
   {
@@ -121,22 +133,32 @@ void GDatabase::read( string filename )
 
     // Read one graph in file to store it
     graph->read( data, v_Tokens, suppGraphID, tmpGClassDB->className  );
+    graph->graphID = incremental_counter++ ;
 
-    if ( graph->className != tmpGClassDB->className )
+    if (graph->className != tmpGClassDB->className )
     {
+      ++tmpClassID;
       // If graph belong to a new classname
-      if ( tmpGClassDB->v_ClassGraphs.size() != 0 )
-        v_GClassDB.push_back( tmpGClassDB );
-      else
-        delete tmpGClassDB;
+      //if ( tmpGClassDB->v_ClassGraphs.size() != 0 )
+      //  v_GClassDB.push_back( tmpGClassDB );
+      //else
+      //  delete tmpGClassDB;
 
-      tmpGClassDB = new GClassDB();
+      //tmpGClassDB = new GClassDB();
+      v_ClassName.push_back(graph->className);
       tmpGClassDB->className = graph->className;
       suppGraphID = 1;
+      tmpGClassDB->class_count.push_back(0);
     }
+    graph->classID = tmpClassID;
     // Add graph to class database
     tmpGClassDB->v_ClassGraphs.push_back( graph );
+
+    tmpGClassDB->class_count[tmpClassID]++;
+    classes_numbers.insert(tmpClassID);
+    tmpGClassDB->number_of_graphs++;
   }
+  tmpGClassDB->number_of_classes = classes_numbers.size();
   if ( tmpGClassDB->v_ClassGraphs.size() != 0 )
     v_GClassDB.push_back( tmpGClassDB );
   // Free memory by closing the file.
@@ -144,7 +166,7 @@ void GDatabase::read( string filename )
 }
 // End of GDatabase::read( string filename )
 
-void GDatabase::processSparseSet( GClassDB *pClassDB )
+void GDatabase::processOccurrencesList( GClassDB *pClassDB )
 {
   /*
    * TODO : RD
@@ -158,7 +180,7 @@ void GDatabase::processSparseSet( GClassDB *pClassDB )
         processEdgeSparseSet( pClassDB, iGraph, iNode, v_Nodes );
   }
 }
-// End of GDatabase::processSparseSet( GClassDB *pClassDB )
+// End of GDatabase::processOccurrencesList( GClassDB *pClassDB )
 
 void GDatabase::processEdgeSparseSet( GClassDB           *pClassDB,
                                       uint               iGraph,
@@ -219,20 +241,20 @@ void GDatabase::addEdgeSpatialSparseSet( GNodeLabel nodeLabelFrom,
   pair< map< GToken, GTokenData, GTokenGt>::iterator, bool>
       p = pClassDB->m_TokenData.insert( p_Data );
   // Store this edge into sparse set
-  GSparseSet::mapEdge sparseEdge;
+  GOccurrencesList::mapEdge sparseEdge;
   sparseEdge.nodeFrom = iNodeFrom;
   sparseEdge.nodeDest = iNodeDest;
   sparseEdge.edgeId   = iEdge;
-  if ( p.first->second.v_SparseOcc.size() == 0
-       || p.first->second.v_SparseOcc.back().graphID
+  if ( p.first->second.v_OccurrencesList.size() == 0
+       || p.first->second.v_OccurrencesList.back().graphID
        != pClassDB->v_ClassGraphs.at(iGraph)->graphID)
   {
     GGraph *pGraph = pClassDB->v_ClassGraphs.at(iGraph);
-    GSparseSet sparseSet( pGraph->graphID, pGraph );
-    p.first->second.v_SparseOcc.push_back( sparseSet );
+    GOccurrencesList occurrencesList( pGraph->graphID, pGraph );
+    p.first->second.v_OccurrencesList.push_back( occurrencesList );
     p.first->second.freq++;
   }
-  p.first->second.v_SparseOcc.back().add( sparseEdge );
+  p.first->second.v_OccurrencesList.back().add( sparseEdge );
 }
 // End of GDatabase::addEdgeSpatialSparseSet( GNodeLabel nodeLabelFrom,
 //                                            GNodeLabel nodeLabelDest,
@@ -272,20 +294,20 @@ void GDatabase::addEdgeTemporalSparseSet( GNodeLabel nodeLabelFrom,
   pair< map< GToken, GTokenData, GTokenGt>::iterator, bool>
       p = pClassDB->m_TokenData.insert( p_Data );
   // Store this edge into sparse set
-  GSparseSet::mapEdge sparseEdge;
+  GOccurrencesList::mapEdge sparseEdge;
   sparseEdge.nodeFrom = iNodeFrom;
   sparseEdge.nodeDest = iNodeDest;
   sparseEdge.edgeId   = iEdge;
-  if ( p.first->second.v_SparseOcc.size() == 0
-       || p.first->second.v_SparseOcc.back().graphID
+  if ( p.first->second.v_OccurrencesList.size() == 0
+       || p.first->second.v_OccurrencesList.back().graphID
        != pClassDB->v_ClassGraphs.at(iGraph)->graphID)
   {
     GGraph *pGraph = pClassDB->v_ClassGraphs.at(iGraph);
-    GSparseSet sparseSet( pGraph->graphID, pGraph );
-    p.first->second.v_SparseOcc.push_back( sparseSet );
+    GOccurrencesList occurrencesList( pGraph->graphID, pGraph );
+    p.first->second.v_OccurrencesList.push_back( occurrencesList );
     p.first->second.freq++;
   }
-  p.first->second.v_SparseOcc.back().add( sparseEdge );
+  p.first->second.v_OccurrencesList.back().add( sparseEdge );
 }
 // End of GDatabase::addEdgeTemporalSparseSet( GNodeLabel nodeLabelFrom,
 //                                             GNodeLabel nodeLabelDest,
@@ -331,9 +353,9 @@ void GDatabase::processHoleInGrid( GClassDB* pClassDB )
                                v_TmpIdNodeToDelete.begin(),
                                v_TmpIdNodeToDelete.end() );
     }
-    cout << v_idNodeToDelete.size() << endl;
     sort(v_idNodeToDelete.begin(), v_idNodeToDelete.end() );
     pClassDB->v_ClassGraphs.at(idxGraph)->setNodeToNoLabel( v_idNodeToDelete );
+    cout << v_idNodeToDelete.size() << endl;
   }
 }
 // End of GDatabase::processHoleInGrid( GClassDB* pClassDB )

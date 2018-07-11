@@ -2,6 +2,8 @@
  *   Copyright (C) 2016 by Romain Deville                                  *
  *   romain.deville[at]insa-lyon.fr                                        *
  * ----------------------------------------------------------------------- *
+ *   Copyright (C) 2018 by Muaz Twaty                                      *
+ *   muaz.sy123[at]gmail.com                                               *
  *                                                                         *
  *   This program is free software; you can redistribute it and/or modify  *
  *   it under the terms of the GNU General Public License as published by  *
@@ -28,11 +30,21 @@
 #include <sstream>
 // Include project class
 #include "global.hpp"
-//#include "grima/gglobal.hpp"
-#include "grima/gdatabase.hpp"
-#include "grima/grima.hpp"
-//#include "grima/greader.hpp"
-//#include "grima/gglobal.hpp"
+
+#include "hologram/gdatabase.hpp"
+#include "hologram/hologram.hpp"
+
+
+// for testing mod
+// #define TESTCAN
+
+#ifdef TESTCAN
+
+#include "hologram/gpattern.hpp"
+#include "hologram/gcanonicaldfscomputer.hpp"
+#include "hologram/gglobal.hpp"
+
+#endif
 
 
 //=============================== NAMESPACE ==================================//
@@ -110,8 +122,9 @@ void parseArg( int argc, char **argv, param &PARAM )
     {         "pattern", required_argument, 0, 'p'},
     {     "patternStat", required_argument, 0, 'x'},
     {  "exclude100Freq",       no_argument, 0, 'X'},
+    {         "classID", required_argument, 0, 'c'},
     {            "help",       no_argument, 0,  0 },
-    {       "tempFirst",       no_argument, 0,  0 },
+	{       "tempFirst",       no_argument, 0,  0 },
     {       "spatFirst",       no_argument, 0,  0 },
     {                 0,                 0, 0,  0 }
   };
@@ -124,7 +137,7 @@ void parseArg( int argc, char **argv, param &PARAM )
     switch ( c )
     {
     case 0:
-      if ( (string)long_options[option_index].name == "tempFirst" )
+	  if ( (string)long_options[option_index].name == "tempFirst" )
         PARAM.TEMP_FIRST = true;
       else if ( (string)long_options[option_index].name == "spatFirst" )
         PARAM.SPAT_FIRST = true;
@@ -219,7 +232,7 @@ void parseArg( int argc, char **argv, param &PARAM )
   }
   else
     PARAM.INFILE=infile;
-
+  
   if ( !PARAM.TEMP_FIRST && !PARAM.SPAT_FIRST )
   {
     cerr << "ERROR - You MUST specify if mining is temporal first or spatial first"
@@ -234,7 +247,7 @@ void parseArg( int argc, char **argv, param &PARAM )
     help();
     exit( EXIT_FAILURE );
   }
-
+  
   // Check if output dir is define
   if ( PARAM.OUTDIR == "" )
   {
@@ -298,36 +311,37 @@ param PARAM = param();
   * @param argv vector of arg
   * @return 0 if no issu, 1 otherwise
 */
+
+// ./hologram2D -o /udd/mtwaty/Downloads/thesis_alg_src/hologram2D/output -T 1 -f 0.5 in.gri
+
+int incremental_counter = 0;
+
 int main( int argc, char **argv )
 {
-  cout << "#==== START OF GRIMA !" << endl;
-
-  int returnStatus = 0;
-  GDatabase graphDB;
-  Grima     grima;
-  bool timeOutOverride = false;
-
+  srand(time(0));
+  cout << "#==== START OF Hologram !" << endl;
   parseArg( argc, argv, PARAM );
 
+  cerr <<"input file "<< PARAM.INFILE << endl;
+  cerr <<"output file "<< PARAM.OUTDIR << endl;
+  cerr <<"time "<< PARAM.TIMEOUT << endl;
+  cerr <<"freq "<< PARAM.MINFREQ << endl;
+
+  GDatabase graphDB;
   graphDB.createGrapheDB( PARAM.INFILE );
-  grima.initNbPatternByClass( graphDB.v_GClassDB );
+  
+  Hologram hologram(PARAM.MINFREQ,graphDB.v_GClassDB.at(0),graphDB.v_ClassName);
 
-
-  for ( uint iClassDB = 0; iClassDB < graphDB.v_GClassDB.size(); iClassDB++ )
+  hologram.initialize();
+  for ( int iClassDB = 1; iClassDB <= hologram.pClassDB->number_of_classes; iClassDB++ )
   {
-    returnStatus = grima.processMining( PARAM.MINFREQ, graphDB.v_GClassDB.at(iClassDB), iClassDB );
-    grima.v_ReturnStatus.push_back(returnStatus);
-    if ( returnStatus == -1 ) // I.E. TIMEOUT
-    {
-      timeOutOverride = true;
-      cerr << "Timeout reached for class" <<  graphDB.v_GClassDB.at(iClassDB)->className << endl;
-    }
-    else if ( returnStatus == -2 ) // Nb pattern reached
-    {
-      cerr << "Nb Pattern reached for class" <<  graphDB.v_GClassDB.at(iClassDB)->className << endl;
-    }
+    hologram.set_class_id(iClassDB);
+    hologram.processMining();
+    hologram.clean();
   }
-  grima.saveData( timeOutOverride );
-  cout << "#==== END OF GRIMA !" << endl;
+  
+  hologram.saveData();
+  cout << "#==== END OF Hologram !" << endl;
+  exit(0);
 }
 // End of main( int argc, char **argv )
